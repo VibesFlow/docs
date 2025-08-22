@@ -1,0 +1,143 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "VIBESFLOW Documentation",
+  "theme": "mint",
+  "colors": {
+    "primary": "#00ff41",
+    "light": "#ff00a0",
+    "dark": "#0cf"
+  },
+  "fonts": {
+    "family": "JetBrains Mono",
+    "weight": 400
+  },
+  "topbarLinks": [
+    {
+      "name": "Start Vibing",
+      "url": "https://vibesflow.app"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Launch App",
+    "url": "https://vibesflow.app"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "quickstart",
+              "development"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "essentials/vibestreams",
+              "essentials/rta-nfts",
+              "essentials/chunking",
+              "essentials/storage"
+            ]
+          },
+          {
+            "group": "Integration",
+            "pages": [
+              "essentials/wallet-connection",
+              "essentials/networks",
+              "essentials/contracts"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "essentials/orchestration",
+              "essentials/live-tracking",
+              "essentials/buffering"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core APIs",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Vibestream APIs",
+            "pages": [
+              "api-reference/endpoint/create-vibestream",
+              "api-reference/endpoint/join-vibestream",
+              "api-reference/endpoint/chunk-audio",
+              "api-reference/endpoint/live-tracking"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Live Vibestreams",
+          "href": "https://vibesflow.app",
+          "icon": "radio"
+        },
+        {
+          "anchor": "Vibe Market",
+          "href": "https://vibesflow.ai",
+          "icon": "store"
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/vibesflow",
+          "icon": "github"
+        }
+      ]
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "App",
+        "href": "https://app.vibesflow.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Start Vibing",
+      "href": "https://app.vibesflow.ai"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/vibesflow_AI",
+      "github": "https://github.com/vibesflow"
+    }
+  },
+  "customCSS": "/custom.css",
+  "customJS": "/glitch.js"
+}

@@ -1,0 +1,251 @@
+/* VIBESFLOW - ADDITIONAL STYLES */
+/* DECENTRALIZED FREQUENCIES // COLLECTIVE RESONANCE // AUTONOMOUS WAVES */
+
+/* This file provides additional styling overrides to ensure perfect app consistency */
+/* All primary styling is in custom.css - this is for supplementary overrides */
+
+/* Import the main custom CSS to ensure it loads first */
+@import url('./custom.css');
+
+/* Additional font imports for complete coverage */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* Ensure absolute font consistency across all elements */
+html *, body *, div *, span *, p *, h1 *, h2 *, h3 *, h4 *, h5 *, h6 *, a *, button *, input *, textarea *, select *, option *, label *, li *, td *, th *, pre *, code * {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Override any remaining default fonts */
+.font-sans, .font-serif, .font-mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Force uppercase for all navigation and button elements */
+nav *, .nav *, .navigation *, .menu *, button *, .button *, [role="button"] * {
+  text-transform: uppercase !important;
+}
+
+/* Additional brand color enforcement */
+:root {
+  --brand-primary: #00ff41 !important;
+  --brand-secondary: #ff00a0 !important;
+  --brand-accent: #0cf !important;
+  --brand-bg: #000000 !important;
+  --brand-bg-light: #0a0a0a !important;
+  --brand-bg-secondary: #1a1a1a !important;
+  --brand-text-primary: #ffffff !important;
+  --brand-text-secondary: #aaaaaa !important;
+  --brand-text-tertiary: #666666 !important;
+}
+
+/* Mintlify component overrides for perfect app matching */
+.mintlify-page *, .mintlify-content *, .mintlify-sidebar *, .mintlify-topbar * {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Code syntax highlighting adjustments to match app theme */
+.hljs, .highlight, .syntax-highlight {
+  background: var(--vf-bg-secondary) !important;
+  color: var(--vf-text-primary) !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in {
+  color: var(--vf-primary) !important;
+}
+
+.hljs-string, .hljs-attr {
+  color: var(--vf-secondary) !important;
+}
+
+.hljs-number, .hljs-literal {
+  color: var(--vf-accent) !important;
+}
+
+.hljs-comment, .hljs-quote {
+  color: var(--vf-text-tertiary) !important;
+  font-style: italic;
+}
+
+/* Tab and accordion styling to match app modals */
+.tab, .accordion, .collapsible {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-primary) !important;
+}
+
+.tab-active, .accordion-active {
+  background: rgba(0, 255, 65, 0.1) !important;
+  border-color: var(--vf-secondary) !important;
+  color: var(--vf-secondary) !important;
+}
+
+/* Image and media styling */
+img, video, iframe {
+  border: 1px solid var(--vf-primary) !important;
+  border-radius: 0 !important;
+}
+
+/* Form elements to match app input styling */
+input, textarea, select {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  padding: 12px !important;
+  border-radius: 0 !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--vf-secondary) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 160, 0.3) !important;
+  outline: none !important;
+}
+
+/* Tooltip and popup styling */
+.tooltip, .popup, .modal {
+  background: var(--vf-bg-light) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Badge and tag styling */
+.badge, .tag, .chip {
+  background: rgba(0, 255, 65, 0.1) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border-radius: 0 !important;
+}
+
+/* Progress bar styling */
+.progress, .progress-bar {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+.progress-fill, .progress-bar-fill {
+  background: linear-gradient(90deg, var(--vf-primary), var(--vf-secondary)) !important;
+}
+
+/* Loading spinner styling */
+.spinner, .loading, .loader {
+  border-color: var(--vf-primary) !important;
+  border-top-color: var(--vf-secondary) !important;
+}
+
+/* Dropdown and menu styling */
+.dropdown, .menu, .context-menu {
+  background: var(--vf-bg-light) !important;
+  border: 1px solid var(--vf-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.dropdown-item, .menu-item {
+  color: var(--vf-text-secondary) !important;
+  padding: 12px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+}
+
+.dropdown-item:hover, .menu-item:hover {
+  background: rgba(0, 255, 65, 0.1) !important;
+  color: var(--vf-primary) !important;
+}
+
+/* Ensure perfect readability in light mode */
+[data-theme="light"] .hljs, 
+[data-theme="light"] .highlight, 
+[data-theme="light"] .syntax-highlight {
+  background: #e9ecef !important;
+  color: #000000 !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+[data-theme="light"] .hljs-keyword, 
+[data-theme="light"] .hljs-selector-tag, 
+[data-theme="light"] .hljs-built_in {
+  color: #006600 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .hljs-string, 
+[data-theme="light"] .hljs-attr {
+  color: #cc0066 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="light"] .hljs-number, 
+[data-theme="light"] .hljs-literal {
+  color: #0066cc !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="light"] .hljs-comment, 
+[data-theme="light"] .hljs-quote {
+  color: #666666 !important;
+  font-style: italic;
+}
+
+/* Final accessibility and readability ensures */
+[data-theme="light"] input, 
+[data-theme="light"] textarea, 
+[data-theme="light"] select {
+  background: #f8f9fa !important;
+  color: #000000 !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+[data-theme="light"] .badge, 
+[data-theme="light"] .tag, 
+[data-theme="light"] .chip {
+  background: rgba(0, 255, 65, 0.2) !important;
+  color: #006600 !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+/* Typography scale matching app FONT_SIZES */
+.text-xs { font-size: 10px !important; }
+.text-sm, .text-small { font-size: 12px !important; }
+.text-md, .text-medium { font-size: 16px !important; }
+.text-lg, .text-large { font-size: 20px !important; }
+.text-xl { font-size: 24px !important; }
+.text-xxl { font-size: 32px !important; }
+.text-xxxl { font-size: 38px !important; }
+
+/* Spacing scale matching app SPACING */
+.spacing-xs { margin: 4px !important; }
+.spacing-sm, .spacing-small { margin: 8px !important; }
+.spacing-md, .spacing-medium { margin: 16px !important; }
+.spacing-lg, .spacing-large { margin: 24px !important; }
+.spacing-xl { margin: 32px !important; }
+.spacing-xxl { margin: 48px !important; }
+
+/* Padding variants */
+.padding-xs { padding: 4px !important; }
+.padding-sm, .padding-small { padding: 8px !important; }
+.padding-md, .padding-medium { padding: 16px !important; }
+.padding-lg, .padding-large { padding: 24px !important; }
+.padding-xl { padding: 32px !important; }
+.padding-xxl { padding: 48px !important; }
+
+/* FINAL CHAOS OVERRIDE - Ensure no element escapes the brand */
+* {
+  box-sizing: border-box !important;
+}
+
+*:not(.vf-glitch-line):not(.vf-chaos-bg):not(.vf-chaos-bg-gradient):not(.vf-chaos-bg-lines) {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Animation performance optimization */
+.vf-glitch-line, .vf-chaos-bg, .vf-chaos-bg-gradient, .vf-chaos-bg-lines {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

@@ -1,0 +1,760 @@
+/* VIBESFLOW - ACID ANARCHO-CHAOTIC DOCS STYLING */
+/* DECENTRALIZED FREQUENCIES // COLLECTIVE RESONANCE // AUTONOMOUS WAVES */
+
+/* Import monospace font for consistency with app */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&display=swap');
+
+/* Root variables - VibesFlow Brand Colors (IDENTICAL to app/theme/index.ts) */
+:root {
+  /* Brand Colors - EXACT match to COLORS constant */
+  --vf-primary: #00ff41;    /* Neon green */
+  --vf-secondary: #ff00a0;  /* Hot pink */
+  --vf-accent: #0cf;        /* Cyan */
+  
+  /* Background Colors - EXACT match */
+  --vf-bg: #000000;
+  --vf-bg-light: #0a0a0a;
+  --vf-bg-secondary: #1a1a1a;
+  
+  /* Text Colors - EXACT match */
+  --vf-text-primary: #ffffff;
+  --vf-text-secondary: #aaaaaa;
+  --vf-text-tertiary: #666666;
+  
+  /* Status Colors - EXACT match */
+  --vf-success: #00ff41;
+  --vf-error: #ff0066;
+  --vf-warning: #ffaa00;
+  
+  /* Chaos Elements - matching SplashScreen glitch effects */
+  --vf-glitch-opacity: 0.1;
+  --vf-chaos-tension: 2px;
+}
+
+/* Dark theme overrides for Mintlify - Force app colors */
+[data-theme="dark"] {
+  --background-primary: var(--vf-bg) !important;
+  --background-secondary: var(--vf-bg-light) !important;
+  --background-tertiary: var(--vf-bg-secondary) !important;
+  
+  --text-primary: var(--vf-text-primary) !important;
+  --text-secondary: var(--vf-text-secondary) !important;
+  --text-tertiary: var(--vf-text-tertiary) !important;
+  
+  --primary: var(--vf-primary) !important;
+  --primary-light: var(--vf-secondary) !important;
+  --primary-dark: var(--vf-accent) !important;
+}
+
+/* Light theme overrides for Mintlify - Maintain readability */
+[data-theme="light"] {
+  --background-primary: #ffffff !important;
+  --background-secondary: #f8f9fa !important;
+  --background-tertiary: #e9ecef !important;
+  
+  --text-primary: var(--vf-bg) !important;
+  --text-secondary: #333333 !important;
+  --text-tertiary: #666666 !important;
+  
+  --primary: var(--vf-primary) !important;
+  --primary-light: var(--vf-secondary) !important;
+  --primary-dark: var(--vf-accent) !important;
+}
+
+/* Base Typography - IDENTICAL to app styling */
+* {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  letter-spacing: var(--vf-chaos-tension) !important;
+}
+
+/* Body and HTML base styles - matching SplashScreen container */
+html, body {
+  background: var(--vf-bg) !important;
+  color: var(--vf-text-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  scroll-behavior: smooth;
+}
+
+/* GLITCH BACKGROUND EFFECT - IDENTICAL to SplashScreen gradientBackground */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(90deg, transparent 98%, rgba(0, 255, 65, 0.1) 100%),
+    linear-gradient(180deg, transparent 98%, rgba(255, 0, 160, 0.1) 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: backgroundGlitch 3s infinite;
+}
+
+@keyframes backgroundGlitch {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
+}
+
+/* CHAOS GLITCH LINES - IDENTICAL to SplashScreen glitch lines */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 98px,
+      rgba(0, 255, 65, 0.05) 100px,
+      transparent 102px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 198px,
+      rgba(0, 204, 255, 0.05) 200px,
+      transparent 202px
+    );
+  pointer-events: none;
+  z-index: 0;
+  animation: chaosLines 5s infinite ease-in-out;
+}
+
+@keyframes chaosLines {
+  0%, 100% { transform: translateX(0px) translateY(0px); opacity: 0.1; }
+  25% { transform: translateX(2px) translateY(-1px); opacity: 0.3; }
+  50% { transform: translateX(-1px) translateY(2px); opacity: 0.2; }
+  75% { transform: translateX(1px) translateY(-2px); opacity: 0.25; }
+}
+
+/* Headers - IDENTICAL to app styling with BRANDING.manifesto style */
+h1, h2, h3, h4, h5, h6 {
+  text-transform: uppercase !important;
+  font-weight: 900 !important;
+  letter-spacing: 3px !important;
+  color: var(--vf-primary) !important;
+  position: relative;
+  z-index: 10;
+}
+
+h1 {
+  font-size: 2.5rem !important;
+  color: var(--vf-primary) !important;
+  text-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+h2 {
+  font-size: 2rem !important;
+  color: var(--vf-secondary) !important;
+  text-shadow: 0 0 15px rgba(255, 0, 160, 0.3);
+}
+
+h3 {
+  font-size: 1.5rem !important;
+  color: var(--vf-accent) !important;
+  text-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
+}
+
+/* Navigation and Sidebar styling - matching app modal backgrounds */
+nav, .sidebar, [data-testid="sidebar"] {
+  background: var(--vf-bg-light) !important;
+  border-right: 1px solid var(--vf-primary) !important;
+}
+
+/* Navigation links - matching VibestreamModal button styling */
+nav a, .sidebar a, [data-testid="sidebar"] a {
+  color: var(--vf-text-secondary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  transition: all 0.2s ease !important;
+}
+
+nav a:hover, .sidebar a:hover, [data-testid="sidebar"] a:hover {
+  color: var(--vf-primary) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
+
+/* Active navigation links - matching app's selectedMode styling */
+nav a[aria-current="page"], .sidebar a[aria-current="page"], [data-testid="sidebar"] a[aria-current="page"] {
+  color: var(--vf-secondary) !important;
+  background: rgba(255, 0, 160, 0.1) !important;
+  border-left: 2px solid var(--vf-secondary) !important;
+  text-shadow: 0 0 10px rgba(255, 0, 160, 0.5) !important;
+}
+
+/* Main content area - matching app's main container */
+main, .main-content, [data-testid="main-content"] {
+  background: var(--vf-bg) !important;
+  color: var(--vf-text-primary) !important;
+  position: relative;
+  z-index: 5;
+}
+
+/* Code blocks - IDENTICAL to app's input styling */
+pre, code {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  position: relative;
+}
+
+/* Inline code - matching app's inline code styling */
+code:not(pre code) {
+  background: rgba(0, 255, 65, 0.1) !important;
+  color: var(--vf-primary) !important;
+  padding: 2px 6px !important;
+  border-radius: 0 !important;
+  border: 1px solid var(--vf-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Code block containers - matching app's inputContainer styling */
+pre {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  padding: 20px !important;
+  margin: 20px 0 !important;
+  position: relative;
+  overflow-x: auto;
+}
+
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 65, 0.02) 2px,
+      rgba(0, 255, 65, 0.02) 4px
+    );
+  pointer-events: none;
+}
+
+/* Buttons - IDENTICAL to VibestreamModal actionButton styling */
+button, .button, [role="button"] {
+  background: transparent !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-primary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  padding: 12px 24px !important;
+  transition: all 0.2s ease !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  border-radius: 0 !important;
+  position: relative;
+  z-index: 10;
+}
+
+button:hover, .button:hover, [role="button"]:hover {
+  background: rgba(0, 255, 65, 0.1) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
+
+/* Primary buttons - matching SplashScreen startButton styling */
+.primary-button, [data-primary="true"] {
+  border-color: var(--vf-secondary) !important;
+  color: var(--vf-secondary) !important;
+}
+
+.primary-button:hover, [data-primary="true"]:hover {
+  background: rgba(255, 0, 160, 0.1) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 160, 0.3) !important;
+  text-shadow: 0 0 10px rgba(255, 0, 160, 0.5) !important;
+}
+
+/* Tables - matching app's grid styling */
+table {
+  border: 1px solid var(--vf-primary) !important;
+  background: var(--vf-bg-light) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+th {
+  background: var(--vf-bg-secondary) !important;
+  color: var(--vf-primary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  border-bottom: 1px solid var(--vf-primary) !important;
+  padding: 12px !important;
+}
+
+td {
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2) !important;
+  padding: 12px !important;
+  color: var(--vf-text-primary) !important;
+}
+
+tr:nth-child(even) td {
+  background: rgba(0, 255, 65, 0.02) !important;
+}
+
+/* Blockquotes - matching app's alert styling */
+blockquote {
+  border-left: 3px solid var(--vf-secondary) !important;
+  background: rgba(255, 0, 160, 0.05) !important;
+  color: var(--vf-text-primary) !important;
+  padding: 20px !important;
+  margin: 20px 0 !important;
+  position: relative;
+}
+
+blockquote::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--vf-secondary), transparent);
+}
+
+/* Links - matching app's link styling with neon effects */
+a {
+  color: var(--vf-accent) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  position: relative;
+}
+
+a:hover {
+  color: var(--vf-primary) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--vf-primary);
+  transition: width 0.2s ease;
+}
+
+a:hover::after {
+  width: 100%;
+}
+
+/* Lists - matching app's list styling */
+ul, ol {
+  color: var(--vf-text-primary) !important;
+}
+
+li {
+  margin: 8px 0 !important;
+  position: relative;
+}
+
+ul li::before {
+  content: '▸';
+  color: var(--vf-primary) !important;
+  font-weight: bold !important;
+  position: absolute;
+  left: -20px;
+}
+
+/* Search - matching app's textInput styling */
+.search-input, input[type="search"] {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-primary) !important;
+  padding: 12px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  border-radius: 0 !important;
+}
+
+.search-input:focus, input[type="search"]:focus {
+  outline: none !important;
+  border-color: var(--vf-secondary) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 160, 0.3) !important;
+}
+
+/* Scrollbar - matching app's neon styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vf-bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vf-primary);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vf-secondary);
+}
+
+/* Callouts and alerts - matching app's modal styling */
+.callout, .alert, [data-callout] {
+  border: 1px solid var(--vf-primary) !important;
+  background: rgba(0, 255, 65, 0.05) !important;
+  padding: 20px !important;
+  margin: 20px 0 !important;
+  position: relative;
+}
+
+.callout::before, .alert::before, [data-callout]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--vf-primary);
+}
+
+/* Warning callouts */
+.callout.warning, .alert.warning, [data-callout="warning"] {
+  border-color: var(--vf-warning) !important;
+  background: rgba(255, 170, 0, 0.05) !important;
+}
+
+.callout.warning::before, .alert.warning::before, [data-callout="warning"]::before {
+  background: var(--vf-warning);
+}
+
+/* Error callouts */
+.callout.error, .alert.error, [data-callout="error"] {
+  border-color: var(--vf-error) !important;
+  background: rgba(255, 0, 102, 0.05) !important;
+}
+
+.callout.error::before, .alert.error::before, [data-callout="error"]::before {
+  background: var(--vf-error);
+}
+
+/* Success callouts */
+.callout.success, .alert.success, [data-callout="success"] {
+  border-color: var(--vf-success) !important;
+  background: rgba(0, 255, 65, 0.05) !important;
+}
+
+.callout.success::before, .alert.success::before, [data-callout="success"]::before {
+  background: var(--vf-success);
+}
+
+/* Footer - matching app's minimal styling */
+footer {
+  background: var(--vf-bg-light) !important;
+  border-top: 1px solid var(--vf-primary) !important;
+  color: var(--vf-text-secondary) !important;
+  padding: 40px 20px !important;
+}
+
+/* Light mode specific overrides - disable glitch effects for readability */
+[data-theme="light"] body::before,
+[data-theme="light"] body::after {
+  display: none;
+}
+
+[data-theme="light"] {
+  --vf-bg: #ffffff;
+  --vf-bg-light: #f8f9fa;
+  --vf-bg-secondary: #e9ecef;
+  --vf-text-primary: #000000;
+  --vf-text-secondary: #333333;
+  --vf-text-tertiary: #666666;
+}
+
+[data-theme="light"] pre {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+[data-theme="light"] code:not(pre code) {
+  background: rgba(0, 255, 65, 0.15) !important;
+  color: #006600 !important;
+  border: 1px solid var(--vf-primary) !important;
+}
+
+[data-theme="light"] nav, 
+[data-theme="light"] .sidebar, 
+[data-theme="light"] [data-testid="sidebar"] {
+  background: var(--vf-bg-light) !important;
+  border-right: 1px solid var(--vf-primary) !important;
+}
+
+[data-theme="light"] main, 
+[data-theme="light"] .main-content, 
+[data-theme="light"] [data-testid="main-content"] {
+  background: var(--vf-bg) !important;
+  color: var(--vf-text-primary) !important;
+}
+
+/* Ensure readability in both modes */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: var(--vf-primary) !important;
+}
+
+[data-theme="light"] p,
+[data-theme="light"] li,
+[data-theme="light"] td,
+[data-theme="light"] span {
+  color: var(--vf-text-primary) !important;
+}
+
+/* Logo and branding enhancements - matching SplashScreen logo effects */
+.logo, [data-testid="logo"] {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 65, 0.3));
+  transition: all 0.3s ease;
+}
+
+.logo:hover, [data-testid="logo"]:hover {
+  filter: drop-shadow(0 0 20px rgba(255, 0, 160, 0.5));
+  transform: scale(1.05);
+}
+
+/* Custom glitch text animation for headers - matching app's glitch effects */
+@keyframes textGlitch {
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+h1:hover, h2:hover, h3:hover {
+  animation: textGlitch 0.3s ease-in-out;
+}
+
+/* Responsive adjustments - matching app's mobile styling */
+@media (max-width: 768px) {
+  * {
+    letter-spacing: 1px !important;
+  }
+  
+  h1 {
+    font-size: 1.8rem !important;
+  }
+  
+  h2 {
+    font-size: 1.4rem !important;
+  }
+  
+  h3 {
+    font-size: 1.2rem !important;
+  }
+}
+
+/* Z-index management - ensuring proper layering like app */
+.main-content, main {
+  position: relative;
+  z-index: 10;
+}
+
+nav, .sidebar, [data-testid="sidebar"] {
+  position: relative;
+  z-index: 15;
+}
+
+/* Final chaos touch - subtle animation matching SplashScreen */
+@keyframes subtleChaos {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.98; }
+}
+
+body {
+  animation: subtleChaos 4s infinite ease-in-out;
+}
+
+/* AGGRESSIVE MINTLIFY-SPECIFIC OVERRIDES - Force app styling */
+.mintlify-sidebar,
+[data-sidebar],
+.sidebar-nav,
+nav[data-testid="sidebar"] {
+  background: var(--vf-bg-light) !important;
+  border-right: 1px solid var(--vf-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.mintlify-content,
+[data-content],
+.main-content,
+main[data-testid="main-content"] {
+  background: var(--vf-bg) !important;
+  color: var(--vf-text-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Override Mintlify navigation styles - matching app's navigation */
+.mintlify-nav-item,
+[data-nav-item],
+.sidebar-nav a,
+nav a {
+  color: var(--vf-text-secondary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.mintlify-nav-item:hover,
+[data-nav-item]:hover,
+.sidebar-nav a:hover,
+nav a:hover {
+  color: var(--vf-primary) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
+
+.mintlify-nav-item.active,
+[data-nav-item].active,
+.sidebar-nav a.active,
+nav a[aria-current="page"] {
+  color: var(--vf-secondary) !important;
+  background: rgba(255, 0, 160, 0.1) !important;
+  border-left: 2px solid var(--vf-secondary) !important;
+  text-shadow: 0 0 10px rgba(255, 0, 160, 0.5) !important;
+}
+
+/* Override Mintlify topbar - matching SplashScreen header */
+.mintlify-topbar,
+[data-topbar],
+.topbar,
+header {
+  background: var(--vf-bg-light) !important;
+  border-bottom: 1px solid var(--vf-primary) !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.mintlify-topbar a,
+[data-topbar] a,
+.topbar a,
+header a {
+  color: var(--vf-text-secondary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.mintlify-topbar a:hover,
+[data-topbar] a:hover,
+.topbar a:hover,
+header a:hover {
+  color: var(--vf-primary) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
+
+/* Override Mintlify CTA buttons - matching SplashScreen buttons */
+.mintlify-cta,
+[data-cta],
+.cta-button,
+.primary-cta {
+  background: transparent !important;
+  border: 1px solid var(--vf-secondary) !important;
+  color: var(--vf-secondary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  border-radius: 0 !important;
+}
+
+.mintlify-cta:hover,
+[data-cta]:hover,
+.cta-button:hover,
+.primary-cta:hover {
+  background: rgba(255, 0, 160, 0.1) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 160, 0.3) !important;
+  text-shadow: 0 0 10px rgba(255, 0, 160, 0.5) !important;
+}
+
+/* Override Mintlify cards - matching app's card styling */
+.mintlify-card,
+[data-card],
+.card {
+  background: var(--vf-bg-secondary) !important;
+  border: 1px solid var(--vf-primary) !important;
+  border-radius: 0 !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+.mintlify-card:hover,
+[data-card]:hover,
+.card:hover {
+  border-color: var(--vf-secondary) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 160, 0.2) !important;
+}
+
+.mintlify-card h3,
+[data-card] h3,
+.card h3,
+.mintlify-card .card-title,
+[data-card] .card-title,
+.card .card-title {
+  color: var(--vf-primary) !important;
+  text-transform: uppercase !important;
+  font-weight: 900 !important;
+  letter-spacing: 2px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* Force override any remaining Mintlify components */
+[class*="mintlify"],
+[data-mintlify],
+[class*="mint-"] {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  letter-spacing: var(--vf-chaos-tension) !important;
+}
+
+/* Ensure all text elements follow the brand - IDENTICAL to app */
+p, span, div, li, td, th, label, input, textarea, select {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  letter-spacing: var(--vf-chaos-tension) !important;
+}
+
+/* FINAL OVERRIDE - Force all button styles to match app exactly */
+button, .button, [role="button"], input[type="button"], input[type="submit"] {
+  background: transparent !important;
+  border: 1px solid var(--vf-primary) !important;
+  color: var(--vf-primary) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  border-radius: 0 !important;
+  padding: 12px 24px !important;
+}
+
+button:hover, .button:hover, [role="button"]:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  background: rgba(0, 255, 65, 0.1) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3) !important;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5) !important;
+}
