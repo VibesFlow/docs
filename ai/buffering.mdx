@@ -1,17 +1,12 @@
 ---
 title: 'Predictive Buffering'
-description: 'Gemini-powered predictive audio buffering system'
+description: 'The predictive buffering system uses Google's Gemini API to anticipate audio requirements and optimize playback performance before audio chunks arrive from Lyria RealTime.'
 ---
-
-# Predictive Buffering System
-
-The predictive buffering system uses Google's Gemini API to anticipate audio requirements and optimize playback performance before audio chunks arrive from Lyria RealTime.
 
 ## Architecture Overview
 
 The buffering system operates on two levels: predictive analysis and real-time audio processing:
 
-<Mermaid>
 ```mermaid
 graph TB
     subgraph "Predictive Layer"
@@ -40,7 +35,6 @@ graph TB
     class LYRIA,CONV,QUEUE,WAA audio
     class PARAMS optimization
 ```
-</Mermaid>
 
 ## Core Components
 
@@ -283,7 +277,6 @@ async prepareCrossfadeBuffering(interpretation) {
 
 Each audio chunk is played with automatic crossfading for seamless transitions:
 
-<Mermaid>
 ```mermaid
 sequenceDiagram
     participant Queue as Audio Queue
@@ -303,7 +296,6 @@ sequenceDiagram
     
     Source->>Source: Auto-disconnect on end
 ```
-</Mermaid>
 
 ```javascript
 // Apply crossfading for seamless transitions

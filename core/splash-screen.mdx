@@ -1,71 +1,18 @@
 ---
 title: "Splash Screen"
-description: "Main entry point with wallet connection and vibestream creation"
+description: "The Splash Screen is VibesFlow's main entry point, providing wallet connection, live vibestream tracking, and navigation to core features. It implements the primary user interface for accessing the platform's functionality."
 ---
-
-# Splash Screen
-
-The Splash Screen serves as VibesFlow's main entry point, providing wallet connection, live vibestream tracking, and navigation to core features. It implements the primary user interface for accessing the platform's functionality.
 
 ## Core Functionality
 
 ### Wallet Integration
 
-The Splash Screen manages multi-network wallet connections:
-
-```javascript
-// Wallet context integration in SplashScreen.tsx
-const { account, connected, disconnect, openModal } = useWallet();
-
-// Connection status display
-const formatAddress = (accountId) => {
-  if (!accountId || typeof accountId !== 'string') return 'CONNECT';
-  if (accountId.length <= 10) return accountId.toUpperCase();
-  return `${accountId.substring(0, 6)}...${accountId.substring(accountId.length - 4)}`.toUpperCase();
-};
-```
-
-### Live Vibestream Tracking
-
-Real-time tracking of active vibestreams across networks:
-
-```javascript
-// Live tracking integration in SplashScreen.tsx
-const [liveVibestreamsData, setLiveVibestreamsData] = useState({
-  liveVibestreams: [],
-  totalLive: 0,
-  nearLive: 0,
-  metisLive: 0,
-  lastUpdated: 0
-});
-
-// Initialize tracking service
-useEffect(() => {
-  const startTracking = async () => {
-    try {
-      await liveVibestreamsTracker.startTracking((data) => {
-        setLiveVibestreamsData(data);
-      });
-    } catch (error) {
-      console.warn('Failed to start live vibestreams tracking:', error);
-    }
-  };
-
-  startTracking();
-
-  return () => {
-    liveVibestreamsTracker.stopTracking((data) => {
-      setLiveVibestreamsData(data);
-    });
-  };
-}, []);
-```
+It manages multi-network wallet connections and Real-time tracking of active vibestreams across networks.
 
 ## User Interface Components
 
 ### Connection Status
 
-<Mermaid>
 ```mermaid
 graph TD
     A[User Opens App] --> B{Wallet Connected?}
@@ -80,54 +27,6 @@ graph TD
     style C fill:#fff3e0
     style D fill:#e8f5e8
     style G fill:#e1f5fe
-```
-</Mermaid>
-
-### Wallet Display Logic
-
-```javascript
-// Connection button rendering in SplashScreen.tsx
-<TouchableOpacity 
-  style={[
-    styles.connectButton,
-    connected && styles.connectedButton
-  ]} 
-  onPress={handleWalletClick}
->
-  <Text style={[
-    styles.connectText,
-    connected && styles.connectedText
-  ]}>
-    {formatAddress(account?.accountId || null)}
-  </Text>
-</TouchableOpacity>
-
-// Dropdown menu for connected users
-{showDisconnectDropdown && connected && (
-  <View style={styles.disconnectDropdown}>
-    <TouchableOpacity onPress={handleOpenProfile}>
-      <Text style={styles.dropdownText}>PROFILE</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={handleDisconnect}>
-      <Text style={styles.dropdownText}>DISCONNECT</Text>
-    </TouchableOpacity>
-  </View>
-)}
-```
-
-### Live Counter Display
-
-```javascript
-// Live vibestreams counter component
-<TouchableOpacity 
-  style={styles.liveVibesContainer}
-  onPress={handleLiveVibes}
->
-  <View style={styles.liveDot} />
-  <Text style={styles.liveVibesText}>
-    {liveVibestreamsData.totalLive} Vibestream{liveVibestreamsData.totalLive !== 1 ? 's' : ''} Live
-  </Text>
-</TouchableOpacity>
 ```
 
 ## Action Handlers

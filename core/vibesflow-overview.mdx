@@ -35,7 +35,6 @@ const processRealTimeSensorData = useCallback(async (sensorData: SensorData) => 
 
 ### Motion-to-Music Pipeline
 
-<Mermaid>
 ```mermaid
 graph TD
     A[Device Sensors] --> B[Sensor Data Collection]
@@ -67,7 +66,6 @@ graph TD
     style E fill:#fff3e0
     style H fill:#f3e5f5
 ```
-</Mermaid>
 
 ## Platform Architecture
 
@@ -111,7 +109,6 @@ const storageService = await synapse.createStorage({
 
 ## User Experience Flow
 
-<Mermaid>
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -133,7 +130,6 @@ sequenceDiagram
     FS->>VP: Confirm Storage
     VP->>U: Real-time Playback
 ```
-</Mermaid>
 
 ## Key Features
 

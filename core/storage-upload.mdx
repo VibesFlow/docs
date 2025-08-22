@@ -1,15 +1,10 @@
 ---
 title: "Storage Upload"
-description: "Filecoin storage integration via Synapse SDK with backend processing and fallbacks"
+description: "The storage upload system handles permanent storage of audio chunks on Filecoin using the Synapse SDK, with comprehensive fallback mechanisms and backend processing coordination."
 ---
-
-# Storage Upload
-
-The storage upload system handles permanent storage of audio chunks on Filecoin using the Synapse SDK, with comprehensive fallback mechanisms and backend processing coordination.
 
 ## Upload Architecture
 
-<Mermaid>
 ```mermaid
 graph TD
     A[Audio Chunks] --> B[Backend Processor]
@@ -47,7 +42,6 @@ graph TD
     style F fill:#f3e5f5
     style K fill:#fff3e0
 ```
-</Mermaid>
 
 ## Synapse SDK Integration
 

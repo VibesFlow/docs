@@ -1,17 +1,15 @@
 ---
 title: 'Lyria RealTime Integration'
-description: 'Google Lyria RealTime API integration for streaming music generation'
+description: 'The Lyria RealTime integration provides direct access to Google's state-of-the-art streaming music generation model, enabling interactive music creation with continuous steering and real-time parameter adjustments.'
 ---
 
 # Lyria RealTime Integration
 
-The Lyria RealTime integration provides direct access to Google's state-of-the-art streaming music generation model, enabling interactive music creation with continuous steering and real-time parameter adjustments.
 
 ## Architecture Overview
 
 The Lyria integration operates through a persistent WebSocket connection with multiple coordination layers:
 
-<Mermaid>
 ```mermaid
 graph TB
     subgraph "Frontend Coordination"
@@ -51,7 +49,6 @@ graph TB
     class SENSOR,INT,PROMPTS,CONFIG control
     class PLAY,RESET state
 ```
-</Mermaid>
 
 ## Technical Specifications
 
@@ -138,7 +135,6 @@ await session.setMusicGenerationConfig({
 
 The system provides comprehensive playback control:
 
-<Mermaid>
 ```mermaid
 stateDiagram-v2
     [*] --> Disconnected
@@ -157,7 +153,6 @@ stateDiagram-v2
     Playing --> Disconnected: Connection lost
     Paused --> Disconnected: Connection lost
 ```
-</Mermaid>
 
 ```javascript
 // Start generation
@@ -207,86 +202,6 @@ await session.setMusicGenerationConfig({
 if (bpmChanged || scaleChanged) {
   await session.reset_context();
 }
-```
-
-## Musical Scale Support
-
-### Available Scales
-
-Lyria supports comprehensive musical scale control:
-
-| Scale Value | Musical Scale |
-|-------------|---------------|
-| `C_MAJOR_A_MINOR` | C major / A minor |
-| `D_FLAT_MAJOR_B_FLAT_MINOR` | D♭ major / B♭ minor |
-| `D_MAJOR_B_MINOR` | D major / B minor |
-| `E_FLAT_MAJOR_C_MINOR` | E♭ major / C minor |
-| `E_MAJOR_D_FLAT_MINOR` | E major / C♯/D♭ minor |
-| `F_MAJOR_D_MINOR` | F major / D minor |
-| `G_FLAT_MAJOR_E_FLAT_MINOR` | G♭ major / E♭ minor |
-| `G_MAJOR_E_MINOR` | G major / E minor |
-| `A_FLAT_MAJOR_F_MINOR` | A♭ major / F minor |
-| `A_MAJOR_G_FLAT_MINOR` | A major / F♯/G♭ minor |
-| `B_FLAT_MAJOR_G_MINOR` | B♭ major / G minor |
-| `B_MAJOR_A_FLAT_MINOR` | B major / G♯/A♭ minor |
-| `SCALE_UNSPECIFIED` | Model decides automatically |
-
-### Scale Implementation
-
-```javascript
-await session.setMusicGenerationConfig({
-  musicGenerationConfig: {
-    scale: 'G_MAJOR_E_MINOR',  // All white keys except F#
-    bpm: 140,
-    density: 0.6
-  }
-});
-
-// Context reset required for scale changes
-await session.reset_context();
-```
-
-## Prompt Engineering
-
-### Instrument Categories
-
-Lyria supports extensive instrument vocabulary:
-
-```javascript
-// Electronic instruments
-"303 Acid Bass", "808 Hip Hop Beat", "TR-909 Drum Machine", 
-"Moog Oscillations", "Dirty Synths", "Spacey Synths"
-
-// Acoustic instruments  
-"Acoustic Guitar", "Precision Bass", "Rhodes Piano", 
-"Ragtime Piano", "Smooth Pianos"
-
-// World instruments
-"Sitar", "Tabla", "Koto", "Didgeridoo", "Steel Drum"
-```
-
-### Genre Specifications
-
-```javascript
-// Electronic genres
-"Minimal Techno", "Deep House", "Acid Jazz", "Drum & Bass", 
-"Dubstep", "Psytrance", "Breakbeat"
-
-// Traditional genres
-"Blues Rock", "Jazz Fusion", "Reggae", "Salsa", 
-"Celtic Folk", "Indian Classical"
-```
-
-### Mood Descriptors
-
-```javascript
-// Atmospheric qualities
-"Ambient", "Dreamy", "Ethereal Ambience", "Psychedelic", 
-"Ominous Drone", "Bright Tones"
-
-// Technical qualities
-"Crunchy Distortion", "Fat Beats", "Glitchy Effects", 
-"Swirling Phasers", "Echo", "Saturated Tones"
 ```
 
 ## Connection Management
@@ -395,7 +310,6 @@ handleLyriaMessage(message) {
 
 The system integrates sensor data with Lyria generation:
 
-<Mermaid>
 ```mermaid
 sequenceDiagram
     participant Sensors as Device Sensors
@@ -414,7 +328,6 @@ sequenceDiagram
     Lyria->>Coord: Audio stream
     Coord->>Sensors: Audio playback
 ```
-</Mermaid>
 
 ### Crossfade Detection
 

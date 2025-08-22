@@ -1,28 +1,13 @@
 ---
 title: "Sensor Processing"
-description: "Raw sensor input collection, interpretation, and orchestration pipeline"
+description: "VibesFlow transforms device motion sensors into musical parameters through a sophisticated processing pipeline that combines real-time data collection, AI interpretation, and orchestration systems."
 ---
-
-# Sensor Processing
-
-VibesFlow transforms device motion sensors into musical parameters through a sophisticated processing pipeline that combines real-time data collection, AI interpretation, and orchestration systems.
 
 ## Sensor Data Collection
 
 ### Raw Input Sources
 
-VibesFlow collects data from device accelerometer and gyroscope sensors:
-
-```javascript
-// Sensor data structure in orchestration/types.ts
-interface SensorData {
-  x: number;        // X-axis acceleration/rotation
-  y: number;        // Y-axis acceleration/rotation  
-  z: number;        // Z-axis acceleration/rotation
-  timestamp: number; // Collection timestamp
-  source?: string;   // Data source identifier
-}
-```
+VibesFlow collects data from device accelerometer, keyboard keys, cursor movements, camera vision, and gyroscope sensors
 
 ### Data Collection Rates
 
@@ -56,7 +41,6 @@ const participantInterval = setInterval(() => {
 
 ## Real-Time Processing Pipeline
 
-<Mermaid>
 ```mermaid
 graph TD
     A[Device Sensors] --> B[Data Collection]
@@ -87,7 +71,6 @@ graph TD
     style F fill:#fff3e0
     style H fill:#f3e5f5
 ```
-</Mermaid>
 
 ## Musical Parameter Mapping
 

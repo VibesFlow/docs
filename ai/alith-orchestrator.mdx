@@ -11,7 +11,6 @@ The Alith Orchestrator is an intelligent music generation system that combines t
 
 The orchestrator implements a distributed architecture with multiple specialized components:
 
-<Mermaid>
 ```mermaid
 graph TB
     subgraph "Backend Orchestrator"
@@ -47,7 +46,6 @@ graph TB
     class LYRIA,GEMINI google
     class QDRANT storage
 ```
-</Mermaid>
 
 ## Core Components
 
@@ -81,7 +79,6 @@ const interpretation = await musicAgent.run(JSON.stringify({
 
 The orchestrator implements intelligent sensor interpretation with rate limiting and smoothing:
 
-<Mermaid>
 ```mermaid
 sequenceDiagram
     participant App as App/Sensors
@@ -100,7 +97,6 @@ sequenceDiagram
     Lyria->>Coord: Audio chunks (16-bit PCM)
     Coord->>App: Buffer and play audio
 ```
-</Mermaid>
 
 ### Rate Limiting and Optimization
 
@@ -158,7 +154,6 @@ this.wsServer.on('connection', (ws) => {
 
 The frontend coordinator manages multiple connection types:
 
-<Mermaid>
 ```mermaid
 graph LR
     subgraph "OrchestrationCoordinator"
@@ -174,7 +169,6 @@ graph LR
     SC -.-> |Fallback| LS
     LS --> |Audio Chunks| GBM
 ```
-</Mermaid>
 
 ## Performance Optimizations
 
@@ -252,91 +246,4 @@ async reconnectToServer() {
     }
   }, delay);
 }
-```
-
-## Configuration
-
-### Environment Variables
-
-Required environment variables for the orchestrator:
-
-```bash
-# Alith/Gemini Configuration
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
-
-# QDrant Configuration (optional)
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=your_qdrant_key
-
-# Server Configuration
-PORT=3001
-```
-
-### Deployment
-
-The orchestrator includes PM2 configuration for production deployment:
-
-```javascript
-// ecosystem.config.js
-module.exports = {
-  apps: [{
-    name: 'vibesflow-orchestrator',
-    script: 'index.js',
-    instances: 1,
-    exec_mode: 'fork',
-    env: {
-      NODE_ENV: 'production'
-    }
-  }]
-};
-```
-
-## Integration Points
-
-### Frontend Integration
-
-The orchestrator integrates with the React Native frontend through the OrchestrationCoordinator:
-
-```javascript
-// Initialize with wallet integration
-await coordinator.initializeWithWallet(walletIntegration);
-
-// Start vibestream session
-await coordinator.startVibestreamSession(rtaId, audioChunkService);
-
-// Process sensor updates
-coordinator.handleSensorUpdate(sensorData);
-```
-
-### Platform Support
-
-The system supports both mobile and web platforms through platform-specific orchestrators:
-
-```javascript
-this.orchestrators = {
-  mobile: mobileOrchestrator,
-  web: webOrchestrator
-};
-
-this.activeOrchestrator = this.orchestrators[this.platform];
-```
-
-## Monitoring and Logging
-
-The orchestrator implements comprehensive logging for monitoring system performance:
-
-```javascript
-console.log('📊 Enhanced preamble statistics:', {
-  totalLength: enhancedPreamble.length,
-  estimatedTokens: Math.ceil(enhancedPreamble.length / 4),
-  knowledgeEmbedded: 'parameters.txt + poems.txt',
-  ragRequired: false
-});
-```
-
-Performance metrics are tracked for optimization:
-
-```javascript
-const processingTime = Date.now() - startTime;
-logPerformance('sensor_processing', processingTime);
 ```

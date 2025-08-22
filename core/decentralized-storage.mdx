@@ -1,15 +1,10 @@
 ---
 title: "Decentralized Storage"
-description: "Backend storage infrastructure with DynamoDB persistence and Filecoin integration"
+description: "Backend storage infrastructure, a hybrid storage architecture combining DynamoDB for metadata persistence, Filecoin for permanent audio storage, and intelligent caching systems for optimal performance."
 ---
-
-# Decentralized Storage
-
-VibesFlow implements a hybrid storage architecture combining DynamoDB for metadata persistence, Filecoin for permanent audio storage, and intelligent caching systems for optimal performance.
 
 ## Storage Architecture
 
-<Mermaid>
 ```mermaid
 graph TD
     A[Audio Chunks] --> B[Backend Processor]
@@ -44,7 +39,6 @@ graph TD
     style E fill:#f3e5f5
     style J fill:#e8f5e8
 ```
-</Mermaid>
 
 ## DynamoDB Persistence
 
