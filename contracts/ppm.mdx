@@ -1,0 +1,352 @@
+---
+title: "PPM Contract"
+description: "Pay-Per-Minute real-time payment processing for vibestreams"
+---
+
+# PPM Contract
+
+The Pay-Per-Minute (PPM) contract manages tMETIS allowances and automatic withdrawals for group vibestreams with real-time pricing. Each allowance is tied to a specific vibeID to ensure isolated spending authorization.
+
+## Contract Overview
+
+**Standard**: Custom payment processing contract  
+**Features**: Time-based payments, allowance management, automatic distribution  
+**Security**: Reentrancy protection, emergency controls, pausable operations
+
+## Core Concepts
+
+### Participant Allowances
+
+Each participant's spending authorization is tracked per vibestream:
+
+```solidity
+struct ParticipantAllowance {
+    uint256 vibeId;           // The vibestream ID
+    address participant;      // Participant's address
+    uint256 authorizedAmount; // Total authorized spending (wei)
+    uint256 spentAmount;      // Amount already spent (wei)
+    uint256 payPerMinute;     // Rate per minute (wei)
+    uint256 joinedAt;         // Join timestamp
+    uint256 lastDeduction;    // Last payment timestamp
+    bool isActive;            // Currently streaming
+    address creator;          // Vibestream creator
+}
+```
+
+### Vibestream Configuration
+
+Each registered vibestream has associated configuration:
+
+```solidity
+struct VibestreamConfig {
+    uint256 vibeId;           // Vibestream identifier
+    address creator;          // Creator address
+    uint256 payPerMinute;     // Payment rate (wei per minute)
+    bool isActive;            // Registration status
+    uint256 totalParticipants; // Active participant count
+    uint256 totalRevenue;     // Cumulative revenue
+}
+```
+
+## Payment Flow
+
+### 1. Vibestream Registration
+
+Only the VibeFactory can register vibestreams:
+
+```solidity
+function registerVibestream(
+    uint256 vibeId,
+    address creator,
+    uint256 payPerMinute
+) external override onlyVibeFactory
+```
+
+### 2. Spending Authorization
+
+Participants authorize spending for specific vibestreams:
+
+```solidity
+function authorizeSpending(
+    uint256 vibeId,
+    uint256 authorizedAmount
+) external payable nonReentrant whenNotPaused
+```
+
+**Requirements:**
+- Must send tMETIS equal to `authorizedAmount`
+- Amount must not exceed `MAX_ALLOWANCE` (1000 tMETIS)
+- Vibestream must be registered and active
+
+**Process:**
+1. Validates payment amount
+2. Creates or updates participant allowance
+3. Refunds excess payment if any
+4. Emits `AllowanceAuthorized` event
+
+### 3. Joining Vibestreams
+
+Participants join active vibestreams to begin payment processing:
+
+```solidity
+function joinVibestream(uint256 vibeId) external nonReentrant
+```
+
+**Requirements:**
+- Must have sufficient allowance (≥ one minute of payments)
+- Cannot already be active in the vibestream
+- Vibestream must be registered
+
+**Process:**
+1. Sets participant as active
+2. Records join timestamp
+3. Adds to active participants list
+4. Starts payment timer
+
+### 4. Real-Time Payment Processing
+
+Payments are processed automatically every 60 seconds:
+
+```solidity
+function processPayments(uint256 vibeId) external
+```
+
+**Payment Logic:**
+1. Calculate elapsed time since last deduction
+2. Determine minutes elapsed (minimum 60 seconds)
+3. Calculate amount owed: `minutes × payPerMinute`
+4. Distribute payment: 80% creator, 20% treasury
+5. Update participant's spent amount and last deduction timestamp
+
+### 5. Leaving Vibestreams
+
+Participants can leave vibestreams to stop payments:
+
+```solidity
+function leaveVibestream(uint256 vibeId) external nonReentrant
+```
+
+**Process:**
+1. Processes final payment for elapsed time
+2. Sets participant as inactive
+3. Removes from active participants list
+4. Emits `ParticipantLeft` event
+
+## Advanced Features
+
+### Allowance Management
+
+#### Increasing Allowances
+
+```solidity
+function increaseAllowance(
+    uint256 vibeId,
+    uint256 additionalAmount
+) external payable nonReentrant
+```
+
+Allows participants to add more funds to existing allowances without leaving the vibestream.
+
+#### Emergency Stop
+
+```solidity
+function emergencyStop(
+    uint256 vibeId,
+    address participant,
+    string calldata reason
+) external
+```
+
+Immediately removes a participant from a vibestream. Can be called by:
+- Contract owner
+- Participant themselves
+- Vibestream creator
+
+### Payment Constants
+
+| Constant | Value | Description |
+|----------|--------|-------------|
+| `MIN_PAYMENT_INTERVAL` | 60 seconds | Minimum time between payments |
+| `MAX_ALLOWANCE` | 1000 tMETIS | Maximum allowance per transaction |
+| `treasuryFeePercent` | 20% | Treasury fee on all payments |
+| `GAS_LIMIT` | 50,000 | Gas limit for external transfers |
+
+## Security Features
+
+### Per-VibeID Isolation
+
+Each allowance is tied to a specific vibestream, preventing cross-contamination:
+
+```solidity
+mapping(uint256 => mapping(address => ParticipantAllowance)) public participantAllowances;
+```
+
+### Reentrancy Protection
+
+All payable functions use OpenZeppelin's `nonReentrant` modifier:
+
+```solidity
+function authorizeSpending(uint256 vibeId, uint256 authorizedAmount) 
+    external payable nonReentrant whenNotPaused
+```
+
+### Emergency Controls
+
+#### Pausable Operations
+
+Contract can be paused to halt all operations:
+
+```solidity
+function pause() external onlyOwner
+function unpause() external onlyOwner
+```
+
+#### Emergency Withdrawal
+
+Owner can withdraw stuck funds in emergencies:
+
+```solidity
+function emergencyWithdraw() external onlyOwner
+```
+
+### Gas Optimization
+
+#### Limited External Calls
+
+All external transfers use gas limits to prevent griefing:
+
+```solidity
+(bool success, ) = payable(creator).call{
+    value: creatorAmount,
+    gas: GAS_LIMIT
+}("");
+```
+
+#### Batch Processing
+
+Multiple participants can be processed in a single transaction:
+
+```solidity
+function processPayments(uint256 vibeId) external {
+    address[] memory participants = activeParticipants[vibeId];
+    for (uint256 i = 0; i < participants.length; i++) {
+        _processParticipantPayment(vibeId, participants[i]);
+    }
+}
+```
+
+## View Functions
+
+### Participant Information
+
+```solidity
+function getParticipantAllowance(uint256 vibeId, address participant) 
+    external view returns (ParticipantAllowance memory)
+
+function getRemainingAllowance(uint256 vibeId, address participant) 
+    external view returns (uint256)
+
+function getParticipantTime(uint256 vibeId, address participant) 
+    external view returns (uint256)
+
+function getAmountOwed(uint256 vibeId, address participant) 
+    external view returns (uint256)
+```
+
+### Vibestream Information
+
+```solidity
+function getVibestreamConfig(uint256 vibeId) 
+    external view returns (VibestreamConfig memory)
+
+function getActiveParticipants(uint256 vibeId) 
+    external view returns (address[] memory)
+
+function getTotalRevenue(uint256 vibeId) 
+    external view returns (uint256)
+```
+
+## Events
+
+### Core Events
+
+```solidity
+event VibestreamRegistered(
+    uint256 indexed vibeId,
+    address indexed creator,
+    uint256 payPerMinute
+);
+
+event AllowanceAuthorized(
+    uint256 indexed vibeId,
+    address indexed participant,
+    uint256 authorizedAmount,
+    uint256 payPerMinute
+);
+
+event ParticipantJoined(
+    uint256 indexed vibeId,
+    address indexed participant,
+    uint256 timestamp
+);
+
+event PaymentDeducted(
+    uint256 indexed vibeId,
+    address indexed participant,
+    address indexed creator,
+    uint256 amount,
+    uint256 timestamp
+);
+```
+
+## Usage Examples
+
+### Authorizing Spending
+
+```solidity
+// Authorize 1 tMETIS for vibestream #123
+ppmContract.authorizeSpending{value: 1 ether}(123, 1 ether);
+```
+
+### Joining a Vibestream
+
+```solidity
+// Join vibestream #123 (requires existing allowance)
+ppmContract.joinVibestream(123);
+```
+
+### Processing Payments
+
+```solidity
+// Process all pending payments for vibestream #123
+ppmContract.processPayments(123);
+```
+
+### Emergency Exit
+
+```solidity
+// Emergency stop for participant in vibestream #123
+ppmContract.emergencyStop(123, participantAddress, "User request");
+```
+
+## Integration with VibeFactory
+
+The PPM contract integrates seamlessly with VibeFactory through automatic registration:
+
+```solidity
+// In VibeFactory.createVibestream()
+if (payPerStream && streamPrice > 0 && ppmContract != address(0)) {
+    IPPM(ppmContract).registerVibestream(vibeId, msg.sender, streamPrice);
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VibeKiosk Contract" icon="ticket" href="/contracts/vibe-kiosk">
+    Learn about ticket sales
+  </Card>
+  <Card title="Contract Flows" icon="diagram-project" href="/contracts/flows">
+    See interaction diagrams
+  </Card>
+</CardGroup>

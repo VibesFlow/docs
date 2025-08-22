@@ -29,59 +29,91 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Core",
         "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
           {
             "group": "Core Concepts",
             "pages": [
-              "essentials/vibestreams",
-              "essentials/rta-nfts",
-              "essentials/chunking",
-              "essentials/storage"
+              "core/vibesflow-overview",
+              "core/rta-protocol",
+              "core/vibestreams",
+              "core/sensor-processing",
+              "core/decentralization"
             ]
           },
           {
-            "group": "Integration",
+            "group": "Services",
             "pages": [
-              "essentials/wallet-connection",
-              "essentials/networks",
-              "essentials/contracts"
+              "core/splash-screen",
+              "core/vibestream-modal",
+              "core/vibe-player",
+              "core/vibe-market",
+              "core/user-profiles"
             ]
           },
           {
-            "group": "Advanced",
+            "group": "Data Processing",
             "pages": [
-              "essentials/orchestration",
-              "essentials/live-tracking",
-              "essentials/buffering"
+              "core/chunking-process",
+              "core/storage-upload",
+              "core/filcdn-integration"
+            ]
+          },
+          {
+            "group": "Infrastructure",
+            "pages": [
+              "core/ai-systems",
+              "core/streaming-infrastructure",
+              "core/decentralized-storage",
+              "core/third-party-integrations"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "AI",
         "groups": [
           {
-            "group": "Core APIs",
+            "group": "AI Systems",
             "pages": [
-              "api-reference/introduction"
+              "ai/alith-orchestrator",
+              "ai/lyria"
             ]
           },
           {
-            "group": "Vibestream APIs",
+            "group": "Audio Processing",
             "pages": [
-              "api-reference/endpoint/create-vibestream",
-              "api-reference/endpoint/join-vibestream",
-              "api-reference/endpoint/chunk-audio",
-              "api-reference/endpoint/live-tracking"
+              "ai/buffering",
+              "ai/viberepair"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contracts",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "contracts/introduction",
+              "contracts/rta-protocol"
+            ]
+          },
+          {
+            "group": "Core Contracts",
+            "pages": [
+              "contracts/vibe-factory",
+              "contracts/ppm",
+              "contracts/vibe-kiosk",
+              "contracts/subscriptions"
+            ]
+          },
+          {
+            "group": "Integration",
+            "pages": [
+              "contracts/delegation",
+              "contracts/flows",
+              "contracts/deployment"
             ]
           }
         ]
@@ -90,13 +122,13 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Live Vibestreams",
-          "href": "https://vibesflow.app",
+          "anchor": "Start Vibing",
+          "href": "https://app.vibesflow.ai",
           "icon": "radio"
         },
         {
           "anchor": "Vibe Market",
-          "href": "https://vibesflow.ai",
+          "href": "https://app.vibesflow.ai/market",
           "icon": "store"
         },
         {
@@ -110,13 +142,13 @@
   "navbar": {
     "links": [
       {
-        "label": "App",
-        "href": "https://app.vibesflow.ai"
+        "label": "Website",
+        "href": "https://vibesflow.ai"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Start Vibing",
+      "label": "Try App",
       "href": "https://app.vibesflow.ai"
     }
   },

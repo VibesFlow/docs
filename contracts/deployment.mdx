@@ -1,0 +1,165 @@
+---
+title: "Deployed Contracts"
+description: "Contract addresses and deployment information on Metis"
+---
+
+# Deployed Contracts
+
+VibesFlow smart contracts are deployed on the Metis Andromeda network. This page provides contract addresses, verification links, and deployment details.
+
+## Network Information
+**Network**: Metis Hyperion (Testnet)
+**Chain ID**: 133717  
+**RPC URL**: `https://hyperion-testnet.metisdevops.link`  
+**Block Explorer**: [Metis Explorer](https://hyperion-testnet-explorer.metisdevops.link)  
+**Native Token**: tMETIS
+
+## Core Contracts
+
+<CardGroup cols={2}>
+  <Card title="VibeFactory" icon="industry">
+    **Address**: `0x49B2E60fF51B107624be84363B718cfF292A0517`
+    
+    Creates RTA NFTs and manages delegation system.
+    
+    [View on Explorer →](https://hyperion-testnet-explorer.metisdevops.link/address/0x49B2E60fF51B107624be84363B718cfF292A0517)
+  </Card>
+  
+  <Card title="VibeKiosk" icon="ticket">
+    **Address**: `0x5ac3193b6DD7B520D63EbE65b59f97a2dF4ee686`
+    
+    Manages ticket sales for all vibestreams.
+    
+    [View on Explorer →](https://hyperion-testnet-explorer.metisdevops.link/address/0x5ac3193b6DD7B520D63EbE65b59f97a2dF4ee686)
+  </Card>
+  
+  <Card title="PPM Contract" icon="clock">
+    **Address**: `0x0BCc714c6eB21FbE2eEcB4A2f40356af181eAefB`
+    
+    Handles real-time pay-per-minute streaming.
+    
+    [View on Explorer →](https://hyperion-testnet-explorer.metisdevops.link/address/0x0BCc714c6eB21FbE2eEcB4A2f40356af181eAefB)
+  </Card>
+  
+  <Card title="Subscriptions" icon="calendar">
+    **Address**: `0xC5178c585784B93bc408eAd828701155a41e4f76`
+    
+    Manages Vibe Market access subscriptions.
+    
+    [View on Explorer →](https://hyperion-testnet-explorer.metisdevops.link/address/0xC5178c585784B93bc408eAd828701155a41e4f76)
+  </Card>
+</CardGroup>
+
+## Administrative Contracts
+
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| **ProxyAdmin** | `0x9DdF4Ff8FAc224fF54701c85b77A00F1b84A66Df` | Manages delegation operations |
+| **Treasury** | `0x058271e764154c322F3D3dDC18aF44F7d91B1c80` | Receives protocol fees |
+
+## Contract Details
+
+### VibeFactory
+- **Standard**: ERC-721 with custom extensions
+- **Symbol**: `VIBE`
+- **Features**: RTA creation, delegation management
+- **Upgradeable**: No (immutable deployment)
+
+### VibeKiosk
+- **Standard**: ERC-721 for tickets
+- **Symbol**: `VIBE-TIX`
+- **Features**: Centralized ticketing, revenue distribution
+- **Upgradeable**: No (immutable deployment)
+
+### PPM Contract
+- **Standard**: Custom payment processor
+- **Features**: Time-based payments, allowance management
+- **Security**: Pausable, emergency controls
+- **Upgradeable**: No (immutable deployment)
+
+### Subscriptions
+- **Standard**: Custom subscription manager
+- **Default Price**: 10 tMETIS
+- **Default Duration**: 30 days
+- **Features**: Time-based access, renewal system
+- **Upgradeable**: No (immutable deployment)
+
+## Deployment Configuration
+
+### Revenue Distribution
+All contracts implement the same revenue split:
+- **Creator Share**: 80%
+- **Treasury Share**: 20%
+
+### Security Parameters
+
+| Parameter | Value | Contract |
+|-----------|--------|----------|
+| Treasury Fee | 20% | PPM, VibeKiosk |
+| Max Allowance | 100 tMETIS | PPM |
+| Payment Interval | 60 seconds | PPM |
+| Subscription Price | 10 tMETIS | Subscriptions |
+| Subscription Duration | 30 days | Subscriptions |
+
+## Integration Guide
+
+### Web3 Integration
+
+```javascript
+// Contract addresses for frontend integration
+const contracts = {
+  vibeFactory: "0x49B2E60fF51B107624be84363B718cfF292A0517",
+  vibeKiosk: "0x5ac3193b6DD7B520D63EbE65b59f97a2dF4ee686", 
+  ppm: "0x0BCc714c6eB21FbE2eEcB4A2f40356af181eAefB",
+  subscriptions: "0xC5178c585784B93bc408eAd828701155a41e4f76",
+  treasury: "0x058271e764154c322F3D3dDC18aF44F7d91B1c80"
+};
+
+// Network configuration
+const network = {
+  chainId: 133717,
+  name: "Metis Hyperion Testnet",
+  rpcUrl: "https://hyperion-testnet.metisdevops.link",
+  blockExplorer: "https://hyperion-testnet-explorer.metisdevops.link"
+};
+```
+
+## Monitoring and Analytics
+
+### Key Metrics to Track
+
+1. **RTA Creation Rate**: New vibestreams per day
+2. **Active Streams**: Concurrent PPM participants
+3. **Ticket Sales**: Volume and revenue
+4. **Subscription Rate**: Active subscribers
+5. **Treasury Revenue**: Total protocol fees
+
+### Event Monitoring
+
+Monitor these key events for system health:
+
+```solidity
+// VibeFactory
+event VibestreamCreated(uint256 indexed vibeId, address indexed creator, ...);
+
+// PPM
+event ParticipantJoined(uint256 indexed vibeId, address indexed participant, ...);
+event PaymentDeducted(uint256 indexed vibeId, address indexed participant, ...);
+
+// VibeKiosk
+event TicketMinted(uint256 indexed vibeId, uint256 indexed ticketId, ...);
+
+// Subscriptions
+event Subscribed(address indexed user, uint256 startTime, ...);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VibeFactory Contract" icon="industry" href="/contracts/vibe-factory">
+    Start creating RTAs
+  </Card>
+  <Card title="Integration Guide" icon="code" href="/essentials/contracts">
+    Build with VibesFlow
+  </Card>
+</CardGroup>

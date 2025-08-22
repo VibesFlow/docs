@@ -1,0 +1,175 @@
+---
+title: "RTA Protocol"
+description: "Real-Time Assets protocol specification and implementation"
+---
+
+# RTA Protocol
+
+Real-Time Assets (RTAs) are NFTs that acquire value in real-time through streaming activities. The RTA protocol is implemented through the integration of VibeFactory and PPM contracts.
+
+## Protocol Overview
+
+RTAs represent vibestreams as ERC-721 tokens that generate revenue through time-based participation. Unlike traditional NFTs with static value, RTAs accumulate value through active streaming sessions.
+
+<Note>
+RTAs are minted through VibeFactory and monetized via the PPM (Pay-Per-Minute) contract.
+</Note>
+
+## Core Mechanics
+
+### RTA Creation
+
+RTAs are created through the `VibeFactory.createVibestream()` function:
+
+```solidity
+function createVibestream(
+    string calldata mode,
+    bool storeToFilecoin,
+    uint256 distance,
+    string calldata metadataURI,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    bool payPerStream,
+    uint256 streamPrice
+) external returns (uint256 vibeId)
+```
+
+### Real-Time Value Accrual
+
+When `payPerStream` is enabled, the RTA generates value through:
+
+1. **Participant Allowances**: Users authorize spending for specific RTAs
+2. **Time-Based Deductions**: PPM contract deducts payments every 60 seconds
+3. **Automatic Distribution**: 80% to creator, 20% to treasury
+
+### RTA Data Structure
+
+Each RTA contains the following immutable and mutable properties:
+
+```solidity
+struct VibeData {
+    address creator;        // RTA creator (immutable)
+    uint256 startDate;      // Creation timestamp (immutable)
+    string mode;            // Stream mode (immutable)
+    bool storeToFilecoin;   // Storage preference (immutable)
+    uint256 distance;       // Geographic constraint (immutable)
+    string metadataURI;     // Metadata URI (mutable)
+    uint256 ticketsAmount;  // Ticket supply (immutable)
+    uint256 ticketPrice;    // Ticket price (immutable)
+    bool finalized;         // Finalization status (mutable)
+    bool payPerStream;      // PPM enablement (immutable)
+    uint256 streamPrice;    // Per-minute rate (immutable)
+}
+```
+
+## Payment Flow
+
+<Steps>
+  <Step title="Authorization">
+    Participants call `PPM.authorizeSpending()` with tMETIS to create allowances for specific RTAs.
+  </Step>
+  <Step title="Stream Entry">
+    Users call `PPM.joinVibestream()` to begin time-based payment processing.
+  </Step>
+  <Step title="Real-Time Deduction">
+    PPM contract automatically deducts payments every 60 seconds while participants remain active.
+  </Step>
+  <Step title="Revenue Distribution">
+    Payments are distributed immediately: 80% to RTA creator, 20% to treasury.
+  </Step>
+</Steps>
+
+## Value Accumulation Model
+
+RTAs accumulate value through the following formula:
+
+```
+RTA Value = Σ(participant_allowances × time_active × pay_per_minute_rate)
+```
+
+Where:
+- `participant_allowances`: Total authorized spending across all participants
+- `time_active`: Cumulative active streaming time
+- `pay_per_minute_rate`: Rate defined at RTA creation (in wei per minute)
+
+## Security Features
+
+### Per-RTA Isolation
+Each RTA maintains isolated allowance tracking to prevent cross-contamination of funds.
+
+### Emergency Controls
+- `PPM.emergencyStop()`: Immediately removes participants from streams
+- Pausable functionality for system-wide halts
+- Maximum allowance limits (1000 tMETIS per transaction)
+
+### Gas Optimization
+- Minimum 60-second payment intervals prevent gas griefing
+- Batch payment processing for multiple participants
+- Gas-limited external calls (50,000 gas limit)
+
+## Integration Points
+
+### VibeFactory Integration
+```solidity
+// RTAs with PPM enabled automatically register with PPM contract
+if (payPerStream && streamPrice > 0) {
+    IPPM(ppmContract).registerVibestream(vibeId, msg.sender, streamPrice);
+}
+```
+
+### VibeKiosk Integration
+RTAs can simultaneously support both ticket sales and real-time streaming:
+
+```solidity
+// Dual monetization: tickets + streaming
+createVibestream(
+    mode,
+    storeToFilecoin,
+    distance,
+    metadataURI,
+    100,        // 100 tickets available
+    0.1 ether,  // 0.1 tMETIS per ticket
+    true,       // Enable PPM
+    0.01 ether  // 0.01 tMETIS per minute
+);
+```
+
+## Protocol Diagram
+
+<div className="mermaid">
+graph TD
+    A[User] -->|createVibestream| B[VibeFactory]
+    B -->|mint RTA NFT| C[ERC-721 Token]
+    B -->|register if payPerStream| D[PPM Contract]
+    
+    E[Participant] -->|authorizeSpending| D
+    E -->|joinVibestream| D
+    D -->|deduct per minute| F[Payment Processing]
+    
+    F -->|80%| G[RTA Creator]
+    F -->|20%| H[Treasury]
+    
+    style C fill:#e1f5fe
+    style D fill:#f3e5f5
+    style F fill:#fff3e0
+</div>
+
+## Implementation Constants
+
+| Parameter | Value | Description |
+|-----------|--------|-------------|
+| `MIN_PAYMENT_INTERVAL` | 60 seconds | Minimum time between payments |
+| `MAX_ALLOWANCE` | 1000 tMETIS | Maximum allowance per transaction |
+| `TREASURY_FEE_PERCENT` | 20% | Treasury fee on all payments |
+| `GAS_LIMIT` | 50,000 | Gas limit for external calls |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="VibeFactory Contract" icon="industry" href="/contracts/vibe-factory">
+    Explore RTA creation mechanics
+  </Card>
+  <Card title="PPM Contract" icon="clock" href="/contracts/ppm">
+    Learn about payment processing
+  </Card>
+</CardGroup>

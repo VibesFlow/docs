@@ -1,0 +1,516 @@
+---
+title: "User Profiles"
+description: "Profile management system with Pinata IPFS storage and display utilities"
+---
+
+# User Profiles
+
+VibesFlow implements a decentralized profile system using Pinata IPFS for storage and efficient caching mechanisms for display across the platform.
+
+## Profile System Architecture
+
+<Mermaid>
+```mermaid
+graph TD
+    A[User Profile] --> B[Local Storage]
+    B --> C[Pinata IPFS]
+    C --> D[Profile Display]
+    
+    A --> E[Profile Manager]
+    E --> F[Cache Management]
+    F --> G[Display Utilities]
+    
+    A --> H[Profile Loader Service]
+    H --> I[Efficient Preloading]
+    I --> J[Market Integration]
+    
+    style C fill:#e1f5fe
+    style E fill:#fff3e0
+    style H fill:#f3e5f5
+```
+</Mermaid>
+
+## Profile Data Structure
+
+### Core Profile Interface
+
+```javascript
+// Profile interface in utils/profile.ts
+export interface CreatorProfile {
+  name?: string;           // Display name
+  profileImage?: string;   // IPFS hash
+  bio?: string;           // Profile description
+}
+```
+
+### Profile Manager Class
+
+```javascript
+// Centralized profile management in utils/profile.ts
+export class ProfileManager {
+  private static profileCache: Map<string, CreatorProfile> = new Map();
+  private static readonly PINATA_URL = process.env.PINATA_URL || 
+    process.env.EXPO_PUBLIC_PINATA_URL || 'vibesflow.mypinata.cloud';
+
+  /**
+   * Load creator profile from localStorage (web) or cache
+   */
+  static async loadCreatorProfile(creatorAccountId: string): Promise<CreatorProfile> {
+    // Check cache first
+    if (this.profileCache.has(creatorAccountId)) {
+      return this.profileCache.get(creatorAccountId)!;
+    }
+
+    try {
+      const profile: CreatorProfile = {};
+      
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        const savedImageHash = localStorage.getItem(`vibesflow_profile_${creatorAccountId}`);
+        if (savedImageHash) {
+          profile.profileImage = savedImageHash;
+        }
+        
+        const savedName = localStorage.getItem(`vibesflow_name_${creatorAccountId}`);
+        if (savedName) {
+          profile.name = savedName;
+        }
+
+        const savedBio = localStorage.getItem(`vibesflow_bio_${creatorAccountId}`);
+        if (savedBio) {
+          profile.bio = savedBio;
+        }
+      }
+      
+      // Cache the profile
+      this.profileCache.set(creatorAccountId, profile);
+      return profile;
+    } catch (error) {
+      console.warn(`⚠️ Failed to load profile for creator ${creatorAccountId}:`, error);
+      return {};
+    }
+  }
+}
+```
+
+## Display Name Resolution
+
+### Intelligent Formatting
+
+```javascript
+// Creator display name with fallback formatting
+static getCreatorDisplayName(creator: string, profile?: CreatorProfile): string {
+  // Use profile name if available
+  if (profile?.name) {
+    return profile.name;
+  }
+  
+  // Format wallet address
+  if (creator.startsWith('0x')) {
+    return `${creator.slice(0, 4)}...${creator.slice(-4)}`;
+  }
+  
+  if (creator.includes('.testnet') || creator.includes('.near')) {
+    const baseName = creator.split('.')[0];
+    return baseName.length > 12 ? `${baseName.slice(0, 8)}...` : baseName;
+  }
+  
+  return creator.length > 12 ? `${creator.slice(0, 8)}...` : creator;
+}
+```
+
+### Image URL Construction
+
+```javascript
+// Profile image URL generation from IPFS hash
+static getCreatorImageUrl(creator: string, profile?: CreatorProfile): string | null {
+  const imageHash = profile?.profileImage;
+  if (imageHash) {
+    return `https://${this.PINATA_URL}/ipfs/${imageHash}`;
+  }
+  return null;
+}
+```
+
+## Profile Loader Service
+
+### Efficient Preloading
+
+```javascript
+// ProfileLoader service in services/ProfileLoader.ts
+export class ProfileLoader {
+  private profileCache: Map<string, any> = new Map();
+  private loadingPromises: Map<string, Promise<any>> = new Map();
+
+  /**
+   * Preload multiple profiles efficiently
+   */
+  async preloadProfiles(creatorIds: string[]): Promise<void> {
+    const loadPromises = creatorIds.map(async (creatorId) => {
+      if (!this.profileCache.has(creatorId) && !this.loadingPromises.has(creatorId)) {
+        const loadPromise = this.loadCreatorProfile(creatorId);
+        this.loadingPromises.set(creatorId, loadPromise);
+        
+        try {
+          const profile = await loadPromise;
+          this.profileCache.set(creatorId, profile);
+        } catch (error) {
+          console.warn(`Failed to preload profile for ${creatorId}:`, error);
+        } finally {
+          this.loadingPromises.delete(creatorId);
+        }
+      }
+    });
+
+    await Promise.allSettled(loadPromises);
+  }
+
+  /**
+   * Get display name from cache
+   */
+  getDisplayName(creator: string): string | null {
+    const cached = this.profileCache.get(creator);
+    if (cached?.name) {
+      return cached.name;
+    }
+    return null;
+  }
+
+  /**
+   * Load individual creator profile
+   */
+  private async loadCreatorProfile(creatorId: string): Promise<any> {
+    return ProfileManager.loadCreatorProfile(creatorId);
+  }
+}
+```
+
+## Integration with Components
+
+### Vibe Market Integration
+
+```javascript
+// Profile integration in VibeMarket.tsx
+const profileLoader = useRef<ProfileLoader>(new ProfileLoader());
+
+// Preload creator profiles when vibestreams change
+useEffect(() => {
+  const loadCreatorProfiles = async () => {
+    if (vibestreams.length === 0) return;
+    
+    const uniqueCreators = [...new Set(vibestreams.map(stream => stream.creator))];
+    
+    // Use ProfileLoader's efficient preloading
+    await profileLoader.current.preloadProfiles(uniqueCreators);
+  };
+  
+  loadCreatorProfiles();
+}, [vibestreams]);
+
+// Display name resolution with caching
+const getDisplayName = useCallback((creator: string): string => {
+  // ProfileLoader handles caching internally
+  const cached = profileLoader.current.getDisplayName(creator);
+  if (cached) return cached;
+  
+  // Fallback formatting
+  if (creator.startsWith('0x')) {
+    return `${creator.slice(0, 5)}...${creator.slice(-6)}`;
+  }
+  return creator;
+}, []);
+```
+
+### Playback Integration
+
+```javascript
+// Profile loading in Playback.tsx
+const profileLoader = useRef<ProfileLoader>(new ProfileLoader());
+
+// Creator profile state
+const [creatorProfile, setCreatorProfile] = useState<{
+  displayName: string;
+  profileImageUri: string | null;
+  bio: string;
+}>({
+  displayName: '',
+  profileImageUri: null,
+  bio: ''
+});
+
+// Load creator profile during initialization
+useEffect(() => {
+  const loadVibestream = async () => {
+    try {
+      const streamData = getVibestreamByRTA(rtaId);
+      if (!streamData) {
+        Alert.alert('Error', 'Vibestream not found');
+        return;
+      }
+
+      setVibestream(streamData);
+      
+      // Load creator profile
+      const profile = await profileLoader.current.loadCreatorProfile(streamData.creator);
+      setCreatorProfile(profile);
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load vibestream:', error);
+    }
+  };
+
+  loadVibestream();
+}, [rtaId, getVibestreamByRTA]);
+```
+
+## Profile Display Components
+
+### Profile Image Component
+
+```javascript
+// Profile image with fallback in Playback.tsx
+<View style={styles.profileImageContainer}>
+  {creatorProfile.profileImageUri ? (
+    <Image 
+      source={{ uri: creatorProfile.profileImageUri }}
+      style={styles.profileImage}
+    />
+  ) : (
+    <View style={styles.profileImagePlaceholder}>
+      <FontAwesome5 name="user-astronaut" size={20} color={COLORS.primary} />
+    </View>
+  )}
+</View>
+```
+
+### Authenticated Image Component
+
+```javascript
+// AuthenticatedImage component for profile pictures
+import AuthenticatedImage from './ui/ProfilePic';
+
+// Usage in components
+<AuthenticatedImage 
+  source={{ uri: profileImageUrl }}
+  style={styles.profileImage}
+  fallback={
+    <View style={styles.profileImagePlaceholder}>
+      <FontAwesome5 name="user-astronaut" size={20} color={COLORS.primary} />
+    </View>
+  }
+/>
+```
+
+## Utility Functions
+
+### Shared Formatting Utilities
+
+```javascript
+// Shared utility functions in utils/profile.ts
+
+/**
+ * Format time helper (shared utility)
+ */
+export const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Format date helper (shared utility)
+ */
+export const formatDate = (timestamp: number): string => {
+  let date: Date;
+  
+  if (timestamp > 1e12) {
+    date = new Date(timestamp);
+  } else if (timestamp > 1e9) {
+    date = new Date(timestamp * 1000);
+  } else {
+    date = new Date();
+  }
+  
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  };
+  
+  return date.toLocaleDateString('en-US', options).toUpperCase();
+};
+
+/**
+ * Network detection helper (shared utility)
+ */
+export const getNetworkFromRtaId = (rtaId: string): 'metis' | 'near' => {
+  const upperRtaId = rtaId.toUpperCase();
+  
+  if (upperRtaId.startsWith('METIS_') || upperRtaId.includes('METIS')) {
+    return 'metis';
+  }
+  if (upperRtaId.startsWith('RTA_') || upperRtaId.startsWith('NEAR_')) {
+    return 'near';
+  }
+  
+  return 'near'; // Default to NEAR
+};
+
+/**
+ * Title extraction helper (shared utility)
+ */
+export const getVibestreamTitle = (stream: any): string => {
+  const rtaId = stream.rta_id;
+  const upperRtaId = rtaId.toUpperCase();
+  
+  // Remove network prefixes for cleaner titles
+  if (upperRtaId.startsWith('METIS_VIBE_')) {
+    return rtaId.substring(11);
+  } else if (upperRtaId.startsWith('METIS_')) {
+    return rtaId.substring(6);
+  } else if (upperRtaId.startsWith('RTA_ID_')) {
+    return rtaId.substring(7);
+  } else if (upperRtaId.startsWith('RTA_')) {
+    return rtaId.substring(4);
+  } else if (upperRtaId.startsWith('NEAR_')) {
+    return rtaId.substring(5);
+  }
+  
+  return rtaId.toUpperCase();
+};
+```
+
+## Storage Integration
+
+### Local Storage Management
+
+```javascript
+// Web-based local storage for profiles
+if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+  // Save profile data
+  localStorage.setItem(`vibesflow_profile_${creatorAccountId}`, imageHash);
+  localStorage.setItem(`vibesflow_name_${creatorAccountId}`, displayName);
+  localStorage.setItem(`vibesflow_bio_${creatorAccountId}`, bio);
+  
+  // Load profile data
+  const savedImageHash = localStorage.getItem(`vibesflow_profile_${creatorAccountId}`);
+  const savedName = localStorage.getItem(`vibesflow_name_${creatorAccountId}`);
+  const savedBio = localStorage.getItem(`vibesflow_bio_${creatorAccountId}`);
+}
+```
+
+### Pinata IPFS Integration
+
+```javascript
+// IPFS URL construction for profile images
+const PINATA_URL = process.env.PINATA_URL || 
+  process.env.EXPO_PUBLIC_PINATA_URL || 'vibesflow.mypinata.cloud';
+
+const getProfileImageUrl = (imageHash: string): string => {
+  return `https://${PINATA_URL}/ipfs/${imageHash}`;
+};
+```
+
+## Performance Optimizations
+
+### Cache Management
+
+```javascript
+// Cache management utilities
+export class ProfileManager {
+  /**
+   * Clear profile cache (for memory management)
+   */
+  static clearCache(): void {
+    this.profileCache.clear();
+  }
+
+  /**
+   * Get cache size for debugging
+   */
+  static getCacheSize(): number {
+    return this.profileCache.size;
+  }
+}
+```
+
+### Efficient Loading
+
+```javascript
+// Prevent duplicate loading with promises map
+private loadingPromises: Map<string, Promise<any>> = new Map();
+
+async preloadProfiles(creatorIds: string[]): Promise<void> {
+  const loadPromises = creatorIds.map(async (creatorId) => {
+    // Check if already cached or loading
+    if (!this.profileCache.has(creatorId) && !this.loadingPromises.has(creatorId)) {
+      const loadPromise = this.loadCreatorProfile(creatorId);
+      this.loadingPromises.set(creatorId, loadPromise);
+      
+      try {
+        const profile = await loadPromise;
+        this.profileCache.set(creatorId, profile);
+      } finally {
+        this.loadingPromises.delete(creatorId);
+      }
+    }
+  });
+
+  await Promise.allSettled(loadPromises);
+}
+```
+
+## Error Handling
+
+### Graceful Fallbacks
+
+```javascript
+// Profile loading with error handling
+static async loadCreatorProfile(creatorAccountId: string): Promise<CreatorProfile> {
+  try {
+    // ... profile loading logic
+  } catch (error) {
+    console.warn(`⚠️ Failed to load profile for creator ${creatorAccountId}:`, error);
+    return {}; // Return empty profile instead of throwing
+  }
+}
+```
+
+### Display Fallbacks
+
+```javascript
+// Display name with multiple fallback strategies
+static getCreatorDisplayName(creator: string, profile?: CreatorProfile): string {
+  // 1. Use profile name if available
+  if (profile?.name) {
+    return profile.name;
+  }
+  
+  // 2. Format Ethereum addresses
+  if (creator.startsWith('0x')) {
+    return `${creator.slice(0, 4)}...${creator.slice(-4)}`;
+  }
+  
+  // 3. Format NEAR addresses
+  if (creator.includes('.testnet') || creator.includes('.near')) {
+    const baseName = creator.split('.')[0];
+    return baseName.length > 12 ? `${baseName.slice(0, 8)}...` : baseName;
+  }
+  
+  // 4. Generic truncation
+  return creator.length > 12 ? `${creator.slice(0, 8)}...` : creator;
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Chunking Process" icon="cube" href="/essentials/chunking-process">
+    Learn about audio processing pipeline
+  </Card>
+  <Card title="FilCDN Integration" icon="network-wired" href="/essentials/filcdn-integration">
+    Understand content delivery system
+  </Card>
+</CardGroup>

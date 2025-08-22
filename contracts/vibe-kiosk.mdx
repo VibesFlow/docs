@@ -1,0 +1,343 @@
+---
+title: "VibeKiosk Contract"
+description: "Centralized ticket management for all vibestreams"
+---
+
+# VibeKiosk Contract
+
+The VibeKiosk contract is a standalone ERC-721 NFT contract that manages ticket sales for all vibestreams. It provides a centralized ticketing system with automatic revenue distribution.
+
+## Contract Overview
+
+**Address**: `0x5ac3193b6DD7B520D63EbE65b59f97a2dF4ee686`  
+**Standard**: ERC-721 (NFT)  
+**Token Symbol**: `VIBE-TIX`  
+**Features**: Centralized ticketing, revenue distribution, ticket validation
+
+## Core Data Structures
+
+### Ticket Configuration
+
+Each vibestream registered with VibeKiosk has an associated configuration:
+
+```solidity
+struct TicketConfig {
+    uint256 vibeId;        // Vibestream identifier
+    address creator;       // Vibestream creator
+    uint256 ticketsAmount; // Total ticket supply
+    uint256 ticketPrice;   // Price per ticket (wei)
+    uint256 distance;      // Geographic constraint
+    uint256 ticketsSold;   // Number of tickets sold
+    bool isActive;         // Registration status
+}
+```
+
+### Ticket Data
+
+Each minted ticket contains detailed information:
+
+```solidity
+struct TicketData {
+    uint256 vibeId;           // Associated vibestream
+    uint256 ticketId;         // Unique ticket identifier
+    address originalOwner;    // Original purchaser
+    uint256 purchasePrice;    // Price paid (wei)
+    uint256 purchaseTimestamp; // Purchase time
+    uint256 ticketNumber;     // Sequential number within vibestream
+}
+```
+
+## Core Functions
+
+### Vibestream Registration
+
+Only VibeFactory can register vibestreams for ticket sales:
+
+```solidity
+function registerVibestream(
+    uint256 vibeId,
+    address creator,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    uint256 distance
+) external onlyVibeFactory
+```
+
+**Parameters:**
+- `vibeId`: Unique vibestream identifier from VibeFactory
+- `creator`: Address that will receive ticket sale revenue
+- `ticketsAmount`: Total number of tickets available (must be > 0)
+- `ticketPrice`: Price per ticket in wei
+- `distance`: Geographic constraint in meters
+
+**Process:**
+1. Validates input parameters
+2. Ensures vibestream is not already registered
+3. Creates ticket configuration
+4. Emits `VibestreamRegistered` event
+
+### Ticket Purchase
+
+Users can purchase tickets for registered vibestreams:
+
+```solidity
+function purchaseTicket(uint256 vibeId) 
+    external payable nonReentrant returns (uint256 ticketId)
+```
+
+**Requirements:**
+- Vibestream must be registered and active
+- Must send sufficient tMETIS (≥ ticket price)
+- Tickets must still be available
+
+**Process:**
+1. Validates vibestream and payment
+2. Mints ERC-721 ticket NFT
+3. Records ticket data and ownership
+4. Updates user and vibestream mappings
+5. Distributes revenue (80% creator, 20% treasury)
+6. Refunds excess payment
+7. Returns unique ticket ID
+
+### Revenue Distribution
+
+Automatic 80/20 split on all ticket sales:
+
+```solidity
+// 80% to creator, 20% to treasury
+uint256 creatorShare = (ticketPrice * 80) / 100;
+uint256 treasuryShare = ticketPrice - creatorShare;
+
+if (creatorShare > 0) {
+    payable(creator).transfer(creatorShare);
+}
+if (treasuryShare > 0) {
+    payable(treasuryReceiver).transfer(treasuryShare);
+}
+```
+
+## Ticket Management
+
+### Ticket Information Retrieval
+
+```solidity
+function getTicketInfo(uint256 ticketId) external view returns (
+    uint256 vibeId,
+    address owner,
+    address originalOwner,
+    uint256 purchasePrice,
+    uint256 purchaseTimestamp,
+    string memory name,
+    uint256 distance,
+    string memory metadataURI,
+    uint256 ticketNumber,
+    uint256 totalTickets
+)
+```
+
+Returns comprehensive ticket information including ownership history and vibestream details.
+
+### User Ticket Queries
+
+```solidity
+// Get all tickets owned by a user
+function getUserTickets(address user) external view returns (uint256[] memory)
+
+// Get user's tickets for a specific vibestream
+function getUserTicketsForVibe(address user, uint256 vibeId) 
+    external view returns (uint256[] memory)
+
+// Check if user has any ticket for a vibestream
+function hasTicketForVibestream(address user, uint256 vibeId) 
+    external view returns (bool)
+```
+
+### Vibestream Queries
+
+```solidity
+// Get all tickets for a vibestream
+function getVibeTickets(uint256 vibeId) external view returns (uint256[] memory)
+
+// Get vibestream ticket configuration
+function getVibeConfig(uint256 vibeId) external view returns (TicketConfig memory)
+
+// Get sales information
+function getSalesInfo(uint256 vibeId) external view returns (
+    uint256 totalTickets,
+    uint256 soldTickets,
+    uint256 remainingTickets,
+    uint256 price,
+    uint256 distance
+)
+```
+
+## Ticket Validation
+
+### Availability Check
+
+```solidity
+function isAvailable(uint256 vibeId) external view returns (bool)
+```
+
+Checks if tickets are still available for purchase.
+
+### Ownership Validation
+
+Standard ERC-721 functions for ownership verification:
+
+```solidity
+function ownerOf(uint256 ticketId) external view returns (address)
+function balanceOf(address owner) external view returns (uint256)
+```
+
+## Events
+
+### Registration Event
+
+```solidity
+event VibestreamRegistered(
+    uint256 indexed vibeId,
+    address indexed creator,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    uint256 distance
+);
+```
+
+### Purchase Event
+
+```solidity
+event TicketMinted(
+    uint256 indexed vibeId,
+    uint256 indexed ticketId,
+    address indexed buyer,
+    uint256 price
+);
+```
+
+## Security Features
+
+### Reentrancy Protection
+
+All payable functions use OpenZeppelin's `nonReentrant` modifier:
+
+```solidity
+function purchaseTicket(uint256 vibeId) 
+    external payable nonReentrant returns (uint256 ticketId)
+```
+
+### Access Control
+
+- Only VibeFactory can register vibestreams
+- Only contract owner can update configuration
+- Standard ERC-721 transfer controls apply to tickets
+
+### Input Validation
+
+Comprehensive validation on all operations:
+
+```solidity
+require(creator != address(0), "Invalid creator address");
+require(ticketsAmount > 0, "Must have at least 1 ticket");
+require(!vibeConfigs[vibeId].isActive, "Vibestream already registered");
+require(msg.value >= config.ticketPrice, "Insufficient payment");
+```
+
+## Administrative Functions
+
+### Configuration Updates
+
+```solidity
+function updateVibeFactory(address _vibeFactory) external onlyOwner
+function updateTreasuryReceiver(address _treasuryReceiver) external onlyOwner
+```
+
+### Emergency Functions
+
+```solidity
+function emergencyWithdraw() external onlyOwner
+```
+
+Allows owner to withdraw contract balance in emergency situations.
+
+## Token URI Generation
+
+Tickets have automatically generated token URIs:
+
+```solidity
+string memory tokenUri = string(abi.encodePacked(
+    "vibestream-", 
+    _toString(vibeId), 
+    "-ticket-", 
+    _toString(ticketId)
+));
+```
+
+## Usage Examples
+
+### Purchasing a Ticket
+
+```solidity
+// Purchase ticket for vibestream #123 (assuming 0.1 tMETIS price)
+uint256 ticketId = vibeKiosk.purchaseTicket{value: 0.1 ether}(123);
+```
+
+### Checking Ticket Ownership
+
+```solidity
+// Check if user owns tickets for vibestream #123
+bool hasTicket = vibeKiosk.hasTicketForVibestream(userAddress, 123);
+
+// Get all user's tickets for vibestream #123
+uint256[] memory userTickets = vibeKiosk.getUserTicketsForVibe(userAddress, 123);
+```
+
+### Getting Sales Information
+
+```solidity
+// Get sales info for vibestream #123
+(
+    uint256 totalTickets,
+    uint256 soldTickets,
+    uint256 remainingTickets,
+    uint256 price,
+    uint256 distance
+) = vibeKiosk.getSalesInfo(123);
+```
+
+## Integration with VibeFactory
+
+VibeKiosk integrates with VibeFactory through automatic registration:
+
+```solidity
+// In VibeFactory.createVibestream()
+if (ticketsAmount > 0 && vibeKiosk != address(0)) {
+    IVibeKiosk(vibeKiosk).registerVibestream(
+        vibeId, 
+        msg.sender, 
+        ticketsAmount, 
+        ticketPrice, 
+        distance
+    );
+}
+```
+
+## Dual Monetization
+
+Vibestreams can simultaneously support both ticket sales and real-time streaming:
+
+1. **Ticket Sales**: One-time purchase for access/perks
+2. **PPM Streaming**: Ongoing payments for active participation
+
+This allows creators to monetize both access and engagement separately.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Subscriptions Contract" icon="calendar" href="/contracts/subscriptions">
+    Learn about Vibe Market subscriptions
+  </Card>
+  <Card title="Contract Flows" icon="diagram-project" href="/contracts/flows">
+    See integration patterns
+  </Card>
+</CardGroup>

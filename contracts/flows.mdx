@@ -1,0 +1,416 @@
+---
+title: "Contract Interaction Flows"
+description: "Visual diagrams of contract interactions and user flows"
+---
+
+# Contract Interaction Flows
+
+This page provides comprehensive diagrams showing how the VibesFlow contracts interact with each other and with users.
+
+## System Architecture
+
+```mermaid
+graph TB
+    subgraph "User Layer"
+        U1[Creator]
+        U2[Participant]
+        U3[Ticket Buyer]
+        U4[Subscriber]
+    end
+    
+    subgraph "Core Contracts"
+        VF["VibeFactory<br/>RTA Creation & Delegation"]
+        PPM["PPM Contract<br/>Real-Time Payments"]
+        VK["VibeKiosk<br/>Ticket Sales"]
+        SUB["Subscriptions<br/>Market Access"]
+    end
+    
+    subgraph "External"
+        T[Treasury]
+        PA[ProxyAdmin]
+    end
+    
+    U1 -->|createVibestream| VF
+    U2 -->|authorizeSpending| PPM
+    U2 -->|joinVibestream| PPM
+    U3 -->|purchaseTicket| VK
+    U4 -->|subscribe| SUB
+    
+    VF -->|register PPM| PPM
+    VF -->|register tickets| VK
+    
+    PPM -->|80%| U1
+    PPM -->|20%| T
+    VK -->|80%| U1
+    VK -->|20%| T
+    SUB -->|100%| T
+    
+    PA -->|delegation| VF
+    
+    style VF fill:#e1f5fe
+    style PPM fill:#f3e5f5
+    style VK fill:#fff3e0
+    style SUB fill:#e8f5e8
+```
+
+## RTA Creation Flow
+
+```mermaid
+sequenceDiagram
+    participant Creator
+    participant VibeFactory
+    participant PPM
+    participant VibeKiosk
+    
+    Creator->>VibeFactory: createVibestream(params)
+    VibeFactory->>VibeFactory: mint RTA NFT
+    
+    alt payPerStream enabled
+        VibeFactory->>PPM: registerVibestream(vibeId, creator, streamPrice)
+        PPM-->>VibeFactory: registered
+    end
+    
+    alt tickets enabled
+        VibeFactory->>VibeKiosk: registerVibestream(vibeId, creator, tickets, price, distance)
+        VibeKiosk-->>VibeFactory: registered
+    end
+    
+    VibeFactory-->>Creator: vibeId (RTA created)
+```
+
+## PPM Payment Flow
+
+```mermaid
+sequenceDiagram
+    participant Participant
+    participant PPM
+    participant Creator
+    participant Treasury
+    
+    Participant->>PPM: authorizeSpending(vibeId, amount) + tMETIS
+    PPM->>PPM: create/update allowance
+    PPM-->>Participant: allowance authorized
+    
+    Participant->>PPM: joinVibestream(vibeId)
+    PPM->>PPM: set active, start timer
+    PPM-->>Participant: joined stream
+    
+    loop Every 60+ seconds
+        PPM->>PPM: processParticipantPayment()
+        PPM->>PPM: calculate minutes elapsed
+        PPM->>PPM: deduct payment
+        PPM->>Creator: transfer 80% of payment
+        PPM->>Treasury: transfer 20% of payment
+    end
+    
+    Participant->>PPM: leaveVibestream(vibeId)
+    PPM->>PPM: process final payment
+    PPM->>PPM: set inactive
+    PPM-->>Participant: left stream
+```
+
+## Ticket Purchase Flow
+
+```mermaid
+sequenceDiagram
+    participant Buyer
+    participant VibeKiosk
+    participant Creator
+    participant Treasury
+    
+    Buyer->>VibeKiosk: purchaseTicket(vibeId) + tMETIS
+    VibeKiosk->>VibeKiosk: validate payment & availability
+    VibeKiosk->>VibeKiosk: mint ticket NFT
+    VibeKiosk->>VibeKiosk: update mappings
+    
+    VibeKiosk->>Creator: transfer 80% of payment
+    VibeKiosk->>Treasury: transfer 20% of payment
+    
+    alt excess payment
+        VibeKiosk->>Buyer: refund excess
+    end
+    
+    VibeKiosk-->>Buyer: ticketId (NFT minted)
+```
+
+## Subscription Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Subscriptions
+    participant Treasury
+    
+    User->>Subscriptions: subscribe() + 10 tMETIS
+    Subscriptions->>Subscriptions: validate payment
+    
+    alt existing subscription
+        Subscriptions->>Subscriptions: extend from current end time
+    else new subscription
+        Subscriptions->>Subscriptions: create 30-day subscription
+    end
+    
+    Subscriptions->>Subscriptions: update active count
+    Subscriptions->>Treasury: transfer 10 tMETIS
+    Subscriptions-->>User: subscription active
+    
+    Note over User,Treasury: 30 days later
+    Subscriptions->>Subscriptions: subscription expires automatically
+```
+
+## Delegation Flow
+
+```mermaid
+sequenceDiagram
+    participant Creator
+    participant VibeFactory
+    participant ProxyAdmin
+    participant Delegate
+    
+    alt Creation with delegation
+        Creator->>VibeFactory: createVibestreamWithDelegate(params, delegatee)
+        VibeFactory->>VibeFactory: mint RTA + set delegate
+        VibeFactory-->>Creator: vibeId with delegation
+    else Post-creation delegation
+        ProxyAdmin->>VibeFactory: setDelegate(vibeId, delegatee)
+        VibeFactory->>VibeFactory: update delegate mapping
+        VibeFactory-->>ProxyAdmin: delegate set
+    end
+    
+    Delegate->>VibeFactory: setMetadataURI(vibeId, newURI)
+    VibeFactory->>VibeFactory: check canModifyVibestream
+    VibeFactory->>VibeFactory: update metadata
+    VibeFactory-->>Delegate: metadata updated
+    
+    ProxyAdmin->>VibeFactory: removeDelegate(vibeId)
+    VibeFactory->>VibeFactory: clear delegate mapping
+    VibeFactory-->>ProxyAdmin: delegate removed
+```
+
+## Multi-Modal Monetization
+
+```mermaid
+graph TD
+    subgraph "Single Vibestream"
+        RTA["RTA NFT<br/>vibeId: 123"]
+    end
+    
+    subgraph "Monetization Channels"
+        PPM["Real-Time Streaming<br/>0.01 tMETIS/min"]
+        VK["Ticket Sales<br/>100 tickets @ 0.1 tMETIS"]
+    end
+    
+    subgraph "Revenue Streams"
+        RS1["Streaming Revenue<br/>Continuous"]
+        RS2["Ticket Revenue<br/>One-time"]
+    end
+    
+    subgraph "Distribution"
+        C["Creator 80%"]
+        T["Treasury 20%"]
+    end
+    
+    RTA --> PPM
+    RTA --> VK
+    
+    PPM --> RS1
+    VK --> RS2
+    
+    RS1 --> C
+    RS1 --> T
+    RS2 --> C
+    RS2 --> T
+    
+    style RTA fill:#e1f5fe
+    style PPM fill:#f3e5f5
+    style VK fill:#fff3e0
+    style RS1 fill:#e8f5e8
+    style RS2 fill:#fff8e1
+```
+
+## Emergency Flows
+
+### PPM Emergency Stop
+
+```mermaid
+sequenceDiagram
+    participant Authority
+    participant PPM
+    participant Participant
+    participant Creator
+    participant Treasury
+    
+    Note over Authority: Owner, Creator, or Participant
+    
+    Authority->>PPM: emergencyStop(vibeId, participant, reason)
+    PPM->>PPM: validate authority
+    
+    alt participant is active
+        PPM->>PPM: processParticipantPayment() (final)
+        PPM->>Creator: transfer 80% of final payment
+        PPM->>Treasury: transfer 20% of final payment
+        PPM->>PPM: set participant inactive
+        PPM->>PPM: remove from active list
+    end
+    
+    PPM-->>Authority: emergency stop completed
+```
+
+### Contract Pause Flow
+
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant Contract
+    participant User
+    
+    Owner->>Contract: pause()
+    Contract->>Contract: set paused = true
+    Contract-->>Owner: contract paused
+    
+    User->>Contract: anyFunction()
+    Contract-->>User: revert "Pausable: paused"
+    
+    Owner->>Contract: unpause()
+    Contract->>Contract: set paused = false
+    Contract-->>Owner: contract unpaused
+    
+    User->>Contract: anyFunction()
+    Contract->>Contract: execute normally
+    Contract-->>User: success
+```
+
+## Cross-Contract Integration
+
+### VibeFactory Integration Points
+
+```mermaid
+graph LR
+    subgraph "VibeFactory Core"
+        VF["createVibestream()"]
+    end
+    
+    subgraph "Integration Logic"
+        PPM_CHECK{"payPerStream?"}
+        VK_CHECK{"tickets > 0?"}
+        DEL_CHECK{"delegate?"}
+    end
+    
+    subgraph "External Contracts"
+        PPM_REG["PPM.registerVibestream()"]
+        VK_REG["VibeKiosk.registerVibestream()"]
+        DEL_SET["setDelegate()"]
+    end
+    
+    VF --> PPM_CHECK
+    VF --> VK_CHECK
+    VF --> DEL_CHECK
+    
+    PPM_CHECK -->|Yes| PPM_REG
+    VK_CHECK -->|Yes| VK_REG
+    DEL_CHECK -->|Yes| DEL_SET
+    
+    style VF fill:#e1f5fe
+    style PPM_REG fill:#f3e5f5
+    style VK_REG fill:#fff3e0
+    style DEL_SET fill:#f0f0f0
+```
+
+## State Transitions
+
+### Participant State in PPM
+
+```mermaid
+stateDiagram-v2
+    [*] --> NoAllowance
+    NoAllowance --> HasAllowance : authorizeSpending()
+    HasAllowance --> Active : joinVibestream()
+    Active --> HasAllowance : leaveVibestream()
+    HasAllowance --> HasAllowance : increaseAllowance()
+    Active --> NoAllowance : funds depleted
+    Active --> HasAllowance : emergencyStop()
+    HasAllowance --> [*] : allowance expires
+    NoAllowance --> [*]
+```
+
+### RTA Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created : createVibestream()
+    Created --> Active : participants join
+    Active --> Active : ongoing streams
+    Created --> Finalized : setFinalized()
+    Active --> Finalized : setFinalized()
+    Finalized --> [*]
+    
+    note right of Finalized : Irreversible state
+```
+
+## Gas Optimization Patterns
+
+### Batch Operations
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant PPM
+    participant Participants
+    
+    Caller->>PPM: processPayments(vibeId)
+    
+    loop For each active participant
+        PPM->>PPM: _processParticipantPayment(participant)
+        PPM->>PPM: calculate & deduct payment
+        PPM->>Participants: distribute payments
+    end
+    
+    PPM-->>Caller: all payments processed
+    
+    Note over Caller,Participants: Single transaction processes all participants
+```
+
+## Error Handling Flows
+
+### Payment Failure Recovery
+
+```mermaid
+sequenceDiagram
+    participant PPM
+    participant Creator
+    participant Treasury
+    
+    PPM->>PPM: calculate payment distribution
+    PPM->>Creator: transfer 80% (limited gas)
+    
+    alt Creator transfer fails
+        PPM->>Treasury: transfer 100% to treasury
+        PPM-->>PPM: emit transfer failure event
+    else Creator transfer succeeds
+        PPM->>Treasury: transfer 20% to treasury
+    end
+    
+    Note over PPM,Treasury: Ensures no funds are stuck
+```
+
+## Integration Summary
+
+The VibesFlow contract system provides:
+
+1. **Modular Architecture**: Each contract handles specific functionality
+2. **Seamless Integration**: Automatic cross-contract registration and communication
+3. **Dual Monetization**: RTAs can generate revenue through both streaming and tickets
+4. **Flexible Delegation**: Comprehensive permission system for management
+5. **Robust Security**: Multiple layers of access control and emergency mechanisms
+6. **Gas Efficiency**: Optimized patterns for cost-effective operations
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployed Contracts" icon="server" href="/contracts/deployment">
+    View live contract addresses
+  </Card>
+  <Card title="RTA Protocol" icon="link" href="/contracts/rta-protocol">
+    Understand the core protocol
+  </Card>
+</CardGroup>

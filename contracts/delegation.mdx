@@ -1,0 +1,365 @@
+---
+title: "Delegation System"
+description: "ProxyAdmin-based delegation for vibestream management"
+---
+
+# Delegation System
+
+The VibeFactory implements a ProxyAdmin-based delegation system that allows RTA creators to authorize others to manage their vibestreams without transferring NFT ownership.
+
+## Overview
+
+Delegation enables creators to grant management permissions for specific RTAs to trusted parties while retaining ownership of the underlying NFT. This is useful for:
+
+- **Management Services**: Hiring third parties to manage vibestreams
+- **Team Collaboration**: Allowing team members to operate vibestreams
+- **Automation**: Delegating to smart contracts or bots
+- **Temporary Access**: Granting time-limited management rights
+
+## Permission Hierarchy
+
+The delegation system implements a multi-level permission hierarchy:
+
+<div className="mermaid">
+graph TD
+    A[Contract Owner] --> B[ProxyAdmin]
+    A --> C[Authorized Addresses]
+    B --> D[Per-RTA Delegates]
+    C --> D
+    E[RTA Creator] --> D
+    
+    style A fill:#ff9999
+    style B fill:#99ccff
+    style C fill:#99ff99
+    style D fill:#ffcc99
+    style E fill:#cc99ff
+</div>
+
+### 1. Contract Owner
+- Full administrative control
+- Can set ProxyAdmin address
+- Can manage authorized addresses
+- Emergency controls
+
+### 2. ProxyAdmin
+- Can set/remove delegates for any RTA
+- Manages global delegation operations
+- Typically a multisig or governance contract
+
+### 3. Authorized Addresses
+- Global whitelist of trusted addresses
+- Can perform delegation operations across all RTAs
+- Managed by owner or ProxyAdmin
+
+### 4. RTA Creator
+- Can manage their own RTAs through authorized addresses
+- Retains NFT ownership
+- Can request delegation during RTA creation
+
+### 5. Delegates
+- Authorized to manage specific RTAs
+- Can update metadata and finalize RTAs
+- Cannot transfer ownership
+
+## Core Functions
+
+### Setting Delegates
+
+#### Direct Delegation (ProxyAdmin Only)
+
+```solidity
+function setDelegate(uint256 vibeId, address delegatee) external
+```
+
+Sets a delegate for a specific RTA. Only callable by ProxyAdmin or ProxyAdmin owner.
+
+#### Delegation During Creation
+
+```solidity
+function createVibestreamWithDelegate(
+    string calldata mode,
+    bool storeToFilecoin,
+    uint256 distance,
+    string calldata metadataURI,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    bool payPerStream,
+    uint256 streamPrice,
+    address delegatee
+) external returns (uint256 vibeId)
+```
+
+Creates an RTA and sets up delegation in a single transaction.
+
+### Removing Delegates
+
+```solidity
+function removeDelegate(uint256 vibeId) external
+```
+
+Removes the current delegate for an RTA.
+
+### Authorization Management
+
+#### Adding Authorized Addresses
+
+```solidity
+function addAuthorizedAddress(address _address) external
+```
+
+Adds an address to the global authorized list. Callable by ProxyAdmin or owner.
+
+#### Removing Authorized Addresses
+
+```solidity
+function removeAuthorizedAddress(address _address) external
+```
+
+Removes an address from the global authorized list.
+
+## Access Control Implementation
+
+### Permission Checking
+
+The `canModifyVibestream` modifier implements comprehensive permission checking:
+
+```solidity
+modifier canModifyVibestream(uint256 vibeId) {
+    bool isCreator = vibestreams[vibeId].creator == msg.sender;
+    bool isAuthorizedAddress = authorizedAddresses[msg.sender];
+    bool isProxyAdmin = msg.sender == proxyAdmin;
+    bool isDelegated = vibeDelegates[vibeId] == msg.sender;
+    
+    require(
+        isCreator || isAuthorizedAddress || isProxyAdmin || isDelegated, 
+        "Not authorized to modify vibestream"
+    );
+    _;
+}
+```
+
+### ProxyAdmin Validation
+
+ProxyAdmin permissions are validated through multiple pathways:
+
+```solidity
+modifier onlyProxyAdmin() {
+    bool isProxyAdmin = msg.sender == proxyAdmin;
+    bool isProxyAdminOwner = proxyAdmin != address(0) && 
+                            ProxyAdmin(proxyAdmin).owner() == msg.sender;
+    require(
+        isProxyAdmin || isProxyAdminOwner, 
+        "Only ProxyAdmin or ProxyAdmin owner can call this"
+    );
+    _;
+}
+```
+
+## Delegated Operations
+
+Delegates can perform the following operations on assigned RTAs:
+
+### Metadata Management
+
+```solidity
+function setMetadataURI(uint256 vibeId, string calldata newMetadataURI) 
+    external canModifyVibestream(vibeId)
+```
+
+Updates the metadata URI for an RTA.
+
+### Finalization
+
+```solidity
+function setFinalized(uint256 vibeId) 
+    external canModifyVibestream(vibeId)
+```
+
+Marks an RTA as finalized (irreversible operation).
+
+## State Tracking
+
+### Delegation Mappings
+
+```solidity
+mapping(uint256 => address) public vibeDelegates; // vibeId => delegatee
+mapping(address => bool) public authorizedAddresses; // Global authorized addresses
+```
+
+### View Functions
+
+```solidity
+function getDelegate(uint256 vibeId) external view returns (address)
+function isAuthorized(address _address) external view returns (bool)
+```
+
+## Events
+
+### Delegation Events
+
+```solidity
+event DelegateSet(uint256 indexed vibeId, address indexed delegatee);
+event AuthorizedAddressAdded(address indexed newAddress);
+event AuthorizedAddressRemoved(address indexed removedAddress);
+event ProxyAdminUpdated(address indexed newProxyAdmin);
+```
+
+## Security Considerations
+
+### Delegation Isolation
+
+Each delegation is isolated to a specific RTA:
+
+```solidity
+// Delegate for RTA #123 cannot modify RTA #456
+vibeDelegates[123] = delegateA;
+vibeDelegates[456] = delegateB;
+```
+
+### Owner Protection
+
+RTA creators retain ultimate control:
+- NFT ownership cannot be transferred by delegates
+- Only specific management functions are delegated
+- Creators can work through authorized addresses to manage delegation
+
+### Emergency Controls
+
+Contract owner maintains emergency capabilities:
+- Can update ProxyAdmin address
+- Can modify authorized address list
+- Can pause contract operations if needed
+
+## Usage Examples
+
+### Creating RTA with Delegation
+
+```solidity
+// Create RTA and delegate to management service
+uint256 vibeId = vibeFactory.createVibestreamWithDelegate(
+    "live",
+    true,
+    1000,
+    "ipfs://metadata",
+    100,
+    0.1 ether,
+    true,
+    0.01 ether,
+    managementServiceAddress
+);
+```
+
+### Setting Delegate After Creation
+
+```solidity
+// ProxyAdmin sets delegate for existing RTA
+vibeFactory.setDelegate(123, newDelegateAddress);
+```
+
+### Delegate Operations
+
+```solidity
+// Delegate updates metadata
+vibeFactory.setMetadataURI(123, "ipfs://updated-metadata");
+
+// Delegate finalizes RTA
+vibeFactory.setFinalized(123);
+```
+
+### Authorization Management
+
+```solidity
+// Add management service to authorized addresses
+vibeFactory.addAuthorizedAddress(managementServiceAddress);
+
+// Remove compromised address
+vibeFactory.removeAuthorizedAddress(compromisedAddress);
+```
+
+## Integration Patterns
+
+### Management Services
+
+Delegation enables professional management services:
+
+1. Creator creates RTA with delegation to service
+2. Service manages day-to-day operations
+3. Creator retains ownership and ultimate control
+4. Revenue flows directly to creator
+
+### Team Collaboration
+
+Teams can collaborate on vibestream management:
+
+1. Add team members to authorized addresses
+2. Team members can delegate specific RTAs
+3. Distributed management with centralized oversight
+
+### Automated Management
+
+Smart contracts can be delegated for automation:
+
+1. Deploy management contract with specific logic
+2. Delegate RTAs to management contract
+3. Automated operations based on predefined rules
+
+## Delegation Flow Diagram
+
+<div className="mermaid">
+sequenceDiagram
+    participant Creator
+    participant VibeFactory
+    participant ProxyAdmin
+    participant Delegate
+    
+    Creator->>VibeFactory: createVibestreamWithDelegate()
+    VibeFactory->>VibeFactory: mint RTA NFT
+    VibeFactory->>VibeFactory: set delegate mapping
+    VibeFactory-->>Creator: vibeId
+    
+    Note over Delegate: Can now manage RTA
+    
+    Delegate->>VibeFactory: setMetadataURI()
+    VibeFactory->>VibeFactory: check canModifyVibestream
+    VibeFactory-->>Delegate: success
+    
+    ProxyAdmin->>VibeFactory: removeDelegate()
+    VibeFactory->>VibeFactory: clear delegate mapping
+    VibeFactory-->>ProxyAdmin: success
+    
+    Note over Delegate: No longer has access
+</div>
+
+## Best Practices
+
+### For Creators
+
+1. **Verify Delegates**: Only delegate to trusted addresses
+2. **Monitor Activity**: Track delegate actions through events
+3. **Use Authorized Services**: Work with established management services
+4. **Retain Control**: Keep ultimate oversight through ownership
+
+### For Delegates
+
+1. **Respect Boundaries**: Only perform authorized operations
+2. **Communicate Changes**: Inform creators of significant actions
+3. **Maintain Security**: Protect delegate private keys
+4. **Follow Guidelines**: Adhere to creator's management preferences
+
+### For ProxyAdmin
+
+1. **Governance**: Implement proper governance for delegation decisions
+2. **Transparency**: Make delegation operations visible
+3. **Security**: Use multisig or timelock for ProxyAdmin operations
+4. **Documentation**: Maintain clear delegation policies
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contract Flows" icon="diagram-project" href="/contracts/flows">
+    See complete interaction diagrams
+  </Card>
+  <Card title="Deployed Contracts" icon="server" href="/contracts/deployment">
+    View contract addresses and setup
+  </Card>
+</CardGroup>

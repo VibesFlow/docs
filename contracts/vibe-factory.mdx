@@ -1,0 +1,293 @@
+---
+title: "VibeFactory Contract"
+description: "RTA NFT creation and delegation management"
+---
+
+# VibeFactory Contract
+
+The VibeFactory contract is the core factory for creating Real-Time Asset (RTA) NFTs and managing their delegation system. It extends ERC-721 functionality with integrated delegation management.
+
+## Contract Overview
+
+**Address**: `0x49B2E60fF51B107624be84363B718cfF292A0517`  
+**Standard**: ERC-721 (NFT) with custom extensions  
+**Features**: RTA creation, delegation management, cross-contract integration
+
+## Core Functions
+
+### Creating RTAs
+
+#### Basic RTA Creation
+
+```solidity
+function createVibestream(
+    string calldata mode,
+    bool storeToFilecoin,
+    uint256 distance,
+    string calldata metadataURI,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    bool payPerStream,
+    uint256 streamPrice
+) external returns (uint256 vibeId)
+```
+
+Creates a new RTA NFT with the specified parameters.
+
+**Parameters:**
+- `mode`: Stream mode identifier
+- `storeToFilecoin`: Whether to store content on Filecoin
+- `distance`: Geographic constraint in meters
+- `metadataURI`: IPFS URI for metadata
+- `ticketsAmount`: Number of tickets available (0 for no tickets)
+- `ticketPrice`: Price per ticket in wei
+- `payPerStream`: Enable real-time payments via PPM
+- `streamPrice`: Payment rate per minute in wei
+
+**Returns:** The newly created RTA's unique identifier
+
+#### RTA Creation with Delegation
+
+```solidity
+function createVibestreamWithDelegate(
+    string calldata mode,
+    bool storeToFilecoin,
+    uint256 distance,
+    string calldata metadataURI,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    bool payPerStream,
+    uint256 streamPrice,
+    address delegatee
+) external returns (uint256 vibeId)
+```
+
+Creates an RTA and sets up delegation in a single transaction.
+
+### Delegation System
+
+The VibeFactory implements a ProxyAdmin-based delegation system that allows RTA creators to authorize others to manage their vibestreams.
+
+#### Setting Delegates
+
+```solidity
+function setDelegate(uint256 vibeId, address delegatee) external
+```
+
+Sets a delegate for a specific RTA. Can only be called by:
+- ProxyAdmin
+- ProxyAdmin owner
+- RTA creator (through authorized addresses)
+
+#### Removing Delegates
+
+```solidity
+function removeDelegate(uint256 vibeId) external
+```
+
+Removes the delegate for an RTA.
+
+#### Authorization Management
+
+```solidity
+function addAuthorizedAddress(address _address) external
+function removeAuthorizedAddress(address _address) external
+```
+
+Manages the global whitelist of authorized addresses that can perform delegation operations.
+
+## Access Control
+
+### Permission Hierarchy
+
+1. **Contract Owner**: Full administrative control
+2. **ProxyAdmin**: Delegation management across all RTAs
+3. **Authorized Addresses**: Global permissions for delegation
+4. **RTA Creator**: Permissions for their specific RTAs
+5. **Delegates**: Permissions for delegated RTAs
+
+### Modifier: `canModifyVibestream`
+
+```solidity
+modifier canModifyVibestream(uint256 vibeId) {
+    bool isCreator = vibestreams[vibeId].creator == msg.sender;
+    bool isAuthorizedAddress = authorizedAddresses[msg.sender];
+    bool isProxyAdmin = msg.sender == proxyAdmin;
+    bool isDelegated = vibeDelegates[vibeId] == msg.sender;
+    
+    require(isCreator || isAuthorizedAddress || isProxyAdmin || isDelegated, 
+            "Not authorized to modify vibestream");
+    _;
+}
+```
+
+## RTA Management
+
+### Metadata Updates
+
+```solidity
+function setMetadataURI(uint256 vibeId, string calldata newMetadataURI) external
+```
+
+Updates the metadata URI for an RTA. Requires `canModifyVibestream` permission.
+
+### Finalization
+
+```solidity
+function setFinalized(uint256 vibeId) external
+```
+
+Marks an RTA as finalized. This is a one-way operation that cannot be reversed.
+
+## Cross-Contract Integration
+
+### PPM Integration
+
+When creating RTAs with `payPerStream = true`, the contract automatically registers the vibestream with the PPM contract:
+
+```solidity
+if (payPerStream && streamPrice > 0 && ppmContract != address(0)) {
+    IPPM(ppmContract).registerVibestream(vibeId, msg.sender, streamPrice);
+}
+```
+
+### VibeKiosk Integration
+
+RTAs with `ticketsAmount > 0` are registered with the VibeKiosk for ticket sales:
+
+```solidity
+if (ticketsAmount > 0 && vibeKiosk != address(0)) {
+    IVibeKiosk(vibeKiosk).registerVibestream(
+        vibeId, 
+        msg.sender, 
+        ticketsAmount, 
+        ticketPrice, 
+        distance
+    );
+}
+```
+
+## View Functions
+
+### RTA Data Retrieval
+
+```solidity
+function getVibestream(uint256 vibeId) external view returns (VibeData memory)
+```
+
+Returns complete RTA data structure.
+
+```solidity
+function getDelegate(uint256 vibeId) external view returns (address)
+```
+
+Returns the current delegate for an RTA.
+
+```solidity
+function isAuthorized(address _address) external view returns (bool)
+```
+
+Checks if an address is globally authorized.
+
+## Events
+
+### RTA Creation
+
+```solidity
+event VibestreamCreated(
+    uint256 indexed vibeId,
+    address indexed creator,
+    uint256 timestamp,
+    string mode,
+    uint256 ticketsAmount,
+    uint256 ticketPrice,
+    address requestedDelegatee
+);
+```
+
+### Delegation Events
+
+```solidity
+event DelegateSet(uint256 indexed vibeId, address indexed delegatee);
+event AuthorizedAddressAdded(address indexed newAddress);
+event AuthorizedAddressRemoved(address indexed removedAddress);
+```
+
+## Gas Optimization
+
+### Gas Buffer
+
+The contract implements a gas buffer mechanism to prevent operations from failing due to insufficient gas:
+
+```solidity
+uint256 private constant MIN_GAS_BUFFER = 50000; // 50k gas buffer
+
+modifier hasEnoughGas() {
+    require(gasleft() > MIN_GAS_BUFFER, "Insufficient gas for operation");
+    _;
+}
+```
+
+## Security Features
+
+### Reentrancy Protection
+
+All state-changing functions use OpenZeppelin's `ReentrancyGuard`:
+
+```solidity
+contract VibeFactory is ERC721URIStorage, Ownable, ReentrancyGuard
+```
+
+### Input Validation
+
+Comprehensive validation on all parameters:
+
+```solidity
+require(_treasuryReceiver != address(0), "Invalid treasury receiver");
+require(bytes(mode).length > 0, "Mode cannot be empty");
+require(bytes(metadataURI).length > 0, "Metadata URI cannot be empty");
+```
+
+## Usage Examples
+
+### Creating a Basic RTA
+
+```solidity
+uint256 vibeId = vibeFactory.createVibestream(
+    "live",              // Live streaming mode
+    true,                // Store on Filecoin
+    1000,                // 1km radius
+    "ipfs://metadata",   // Metadata URI
+    0,                   // No tickets
+    0,                   // No ticket price
+    true,                // Enable PPM
+    0.01 ether          // 0.01 tMETIS per minute
+);
+```
+
+### Creating RTA with Tickets and Delegation
+
+```solidity
+uint256 vibeId = vibeFactory.createVibestreamWithDelegate(
+    "event",             // Event mode
+    false,               // No Filecoin storage
+    500,                 // 500m radius
+    "ipfs://event-meta", // Event metadata
+    100,                 // 100 tickets
+    0.1 ether,          // 0.1 tMETIS per ticket
+    false,               // No PPM
+    0,                   // No streaming price
+    delegateAddress      // Delegate address
+);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="PPM Contract" icon="clock" href="/contracts/ppm">
+    Learn about real-time payments
+  </Card>
+  <Card title="Delegation Guide" icon="user-group" href="/contracts/delegation">
+    Understand delegation mechanics
+  </Card>
+</CardGroup>

@@ -1,0 +1,372 @@
+---
+title: "Subscriptions Contract"
+description: "Monthly subscription management for Vibe Market access"
+---
+
+# Subscriptions Contract
+
+The Subscriptions contract manages monthly subscriptions for VibesFlow Vibe Market access. Users pay 10 tMETIS for 30-day access to the Vibe Market platform.
+
+## Contract Overview
+
+**Address**: `0xC5178c585784B93bc408eAd828701155a41e4f76`  
+**Standard**: Custom subscription management  
+**Default Price**: 10 tMETIS (configurable)  
+**Default Duration**: 30 days (configurable)  
+**Features**: Time-based subscriptions, automatic expiration, renewal system
+
+## Subscription Model
+
+### Subscription Structure
+
+Each user's subscription is tracked with the following data:
+
+```solidity
+struct Subscription {
+    uint256 startTime;      // When subscription started
+    uint256 endTime;        // When subscription expires
+    uint256 amountPaid;     // Total amount paid in tMETIS
+    bool isActive;          // Current subscription status
+    uint256 renewalCount;   // Number of times renewed
+}
+```
+
+### Default Configuration
+
+```solidity
+uint256 public constant DEFAULT_SUBSCRIPTION_PRICE = 10 ether; // 10 tMETIS
+uint256 public constant DEFAULT_SUBSCRIPTION_DURATION = 30 days; // 30 days
+```
+
+## Core Functions
+
+### Initial Subscription
+
+```solidity
+function subscribe() external payable nonReentrant whenNotPaused
+```
+
+Creates a new subscription or extends an existing one.
+
+**Requirements:**
+- Must send exactly `subscriptionPrice` tMETIS
+- Contract must not be paused
+
+**Process:**
+1. Validates payment amount
+2. Calculates subscription period
+3. If existing subscription is active, extends from current end time
+4. If no subscription or expired, starts new 30-day period
+5. Updates active subscriber tracking
+6. Transfers payment to treasury
+7. Emits subscription event
+
+### Subscription Renewal
+
+```solidity
+function renewSubscription() external payable nonReentrant whenNotPaused
+```
+
+Renews an existing subscription.
+
+**Requirements:**
+- Must have previously subscribed
+- Must send exactly `subscriptionPrice` tMETIS
+
+**Process:**
+1. Validates existing subscription
+2. If still active, extends from current end time
+3. If expired, starts new period from current time
+4. Increments renewal counter
+5. Updates payment tracking
+6. Transfers to treasury
+
+## Subscription Validation
+
+### Active Subscription Check
+
+```solidity
+function isSubscribed(address user) external view returns (bool)
+```
+
+Checks if a user currently has an active subscription:
+
+```solidity
+function isSubscribed(address user) external view returns (bool) {
+    Subscription memory userSub = subscriptions[user];
+    return userSub.isActive && block.timestamp < userSub.endTime;
+}
+```
+
+### Time Remaining
+
+```solidity
+function getTimeRemaining(address user) external view returns (uint256)
+```
+
+Returns seconds remaining on subscription (0 if expired or no subscription).
+
+### Expiration Check
+
+```solidity
+function hasExpiredSubscription(address user) external view returns (bool)
+```
+
+Checks if user has a subscription that has expired.
+
+## Administrative Functions
+
+### Price Management
+
+```solidity
+function setSubscriptionPrice(uint256 newPrice) external onlyOwner
+```
+
+Updates the subscription price. Emits `SubscriptionPriceUpdated` event.
+
+### Duration Management
+
+```solidity
+function setSubscriptionDuration(uint256 newDuration) external onlyOwner
+```
+
+Updates the subscription duration. Emits `SubscriptionDurationUpdated` event.
+
+### Treasury Configuration
+
+```solidity
+function setTreasuryReceiver(address newTreasury) external onlyOwner
+```
+
+Updates the treasury receiver address.
+
+## Emergency Controls
+
+### Pausable Operations
+
+```solidity
+function pause() external onlyOwner
+function unpause() external onlyOwner
+```
+
+Allows owner to halt all subscription operations in emergencies.
+
+### Emergency Withdrawal
+
+```solidity
+function emergencyWithdraw() external onlyOwner
+```
+
+Transfers any stuck contract balance to treasury (normal operations send payments immediately).
+
+## Maintenance Functions
+
+### Cleanup Expired Subscriptions
+
+```solidity
+function cleanupExpiredSubscriptions(address[] calldata users) external
+```
+
+Maintenance function to update active subscriber count by marking expired subscriptions as inactive:
+
+```solidity
+function cleanupExpiredSubscriptions(address[] calldata users) external {
+    for (uint256 i = 0; i < users.length; i++) {
+        address user = users[i];
+        Subscription storage userSub = subscriptions[user];
+        
+        if (userSub.startTime > 0 && block.timestamp >= userSub.endTime && userSub.isActive) {
+            userSub.isActive = false;
+            
+            if (isActiveSubscriber[user]) {
+                isActiveSubscriber[user] = false;
+                if (activeSubscriberCount > 0) {
+                    activeSubscriberCount--;
+                }
+            }
+        }
+    }
+}
+```
+
+## Analytics Functions
+
+### Subscriber Metrics
+
+```solidity
+function getActiveSubscriberCount() external view returns (uint256)
+function getTotalRevenue() external view returns (uint256)
+```
+
+Provides real-time metrics on subscriber count and revenue.
+
+### Configuration Queries
+
+```solidity
+function getSubscriptionPrice() external view returns (uint256)
+function getSubscriptionDuration() external view returns (uint256)
+function getContractBalance() external view returns (uint256)
+```
+
+## Events
+
+### Subscription Events
+
+```solidity
+event Subscribed(
+    address indexed user,
+    uint256 startTime,
+    uint256 endTime,
+    uint256 amountPaid
+);
+
+event SubscriptionRenewed(
+    address indexed user,
+    uint256 newEndTime,
+    uint256 amountPaid,
+    uint256 renewalCount
+);
+```
+
+### Configuration Events
+
+```solidity
+event SubscriptionPriceUpdated(uint256 oldPrice, uint256 newPrice);
+event SubscriptionDurationUpdated(uint256 oldDuration, uint256 newDuration);
+event TreasuryReceiverUpdated(address indexed oldTreasury, address indexed newTreasury);
+```
+
+## Security Features
+
+### Payment Validation
+
+Strict payment validation ensures exact amounts:
+
+```solidity
+require(msg.value == subscriptionPrice, "Subscriptions: Incorrect payment amount");
+```
+
+### Reentrancy Protection
+
+All payable functions use `nonReentrant` modifier:
+
+```solidity
+function subscribe() external payable nonReentrant whenNotPaused
+```
+
+### Access Control
+
+- Only owner can modify configuration
+- Only owner can pause/unpause operations
+- Users can only manage their own subscriptions
+
+### Fallback Protection
+
+Contract rejects direct payments:
+
+```solidity
+receive() external payable {
+    revert("Subscriptions: Use subscribe() function");
+}
+
+fallback() external payable {
+    revert("Subscriptions: Use subscribe() function");
+}
+```
+
+## Usage Examples
+
+### Initial Subscription
+
+```solidity
+// Subscribe for 30 days (10 tMETIS)
+subscriptions.subscribe{value: 10 ether}();
+```
+
+### Renewal
+
+```solidity
+// Renew existing subscription
+subscriptions.renewSubscription{value: 10 ether}();
+```
+
+### Checking Subscription Status
+
+```solidity
+// Check if user has active subscription
+bool isActive = subscriptions.isSubscribed(userAddress);
+
+// Get time remaining
+uint256 timeLeft = subscriptions.getTimeRemaining(userAddress);
+
+// Get full subscription details
+Subscription memory userSub = subscriptions.getSubscription(userAddress);
+```
+
+### Administrative Operations
+
+```solidity
+// Update subscription price to 15 tMETIS
+subscriptions.setSubscriptionPrice(15 ether);
+
+// Update duration to 60 days
+subscriptions.setSubscriptionDuration(60 days);
+
+// Pause subscriptions
+subscriptions.pause();
+```
+
+## Integration Points
+
+### Vibe Market Access Control
+
+The subscription contract serves as an access control mechanism for the Vibe Market. Frontend applications can check subscription status before granting access:
+
+```javascript
+const isSubscribed = await subscriptionsContract.isSubscribed(userAddress);
+if (!isSubscribed) {
+    // Redirect to subscription page
+    showSubscriptionModal();
+}
+```
+
+### Revenue Tracking
+
+All subscription payments flow directly to the treasury, providing transparent revenue tracking:
+
+```solidity
+// In subscribe() and renewSubscription()
+(bool success, ) = payable(treasuryReceiver).call{value: msg.value}("");
+require(success, "Subscriptions: Payment to treasury failed");
+```
+
+## Subscription Lifecycle
+
+<Steps>
+  <Step title="Initial Subscription">
+    User calls `subscribe()` with 10 tMETIS, receives 30-day access
+  </Step>
+  <Step title="Active Period">
+    User has full Vibe Market access, tracked via `isSubscribed()`
+  </Step>
+  <Step title="Renewal">
+    User can renew before or after expiration via `renewSubscription()`
+  </Step>
+  <Step title="Expiration">
+    Subscription expires automatically, access is revoked
+  </Step>
+  <Step title="Cleanup">
+    Periodic cleanup maintains accurate active subscriber count
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Delegation System" icon="user-group" href="/contracts/delegation">
+    Learn about delegation mechanics
+  </Card>
+  <Card title="Deployed Contracts" icon="server" href="/contracts/deployment">
+    View contract addresses
+  </Card>
+</CardGroup>
